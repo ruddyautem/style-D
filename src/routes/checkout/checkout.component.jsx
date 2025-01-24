@@ -1,43 +1,40 @@
-import { useContext } from 'react';
-import CheckoutItem from '../../components/checkout-item/checkout-item.component';
-import App from './../../App';
-import CartItem from './../../components/cart-item/cart-item.component';
-import { CartContext } from './../../contexts/cart.context';
+import CheckoutProduct from "../../components/checkout-item/checkout-product.component";
 import {
-	CheckoutContainer,
-	CheckoutHeader,
-	HeaderBlock,
-	Total
-} from './checkout.styles';
+  CheckoutContainer,
+  CheckoutHeader,
+  HeaderBlock,
+  Total,
+} from "./checkout.styles";
+import useCartStore from "../../stores/cartStore";
 
 const Checkout = () => {
-	const { cartItems, cartTotal } = useContext(CartContext);
+  const { cartProducts, cartTotal } = useCartStore();
 
-	return (
-		<CheckoutContainer>
-			<CheckoutHeader>
-				<HeaderBlock>
-					<span>Product</span>
-				</HeaderBlock>
-				<HeaderBlock>
-					<span>Description</span>
-				</HeaderBlock>
-				<HeaderBlock>
-					<span>Quantity</span>
-				</HeaderBlock>
-				<HeaderBlock>
-					<span>Price</span>
-				</HeaderBlock>
-				<HeaderBlock>
-					<span>Remove</span>
-				</HeaderBlock>
-			</CheckoutHeader>
-			{cartItems.map((cartItem) => (
-				<CheckoutItem key={cartItem.id} cartItem={cartItem} />
-			))}
-			<Total>Total: ${cartTotal}</Total>
-		</CheckoutContainer>
-	);
+  return (
+    <CheckoutContainer>
+      <CheckoutHeader>
+        <HeaderBlock>
+          <span>Article</span>
+        </HeaderBlock>
+        <HeaderBlock>
+          <span>Description</span>
+        </HeaderBlock>
+        <HeaderBlock>
+          <span>Quantité</span>
+        </HeaderBlock>
+        <HeaderBlock>
+          <span>Prix</span>
+        </HeaderBlock>
+        <HeaderBlock>
+          <span>Supprimer</span>
+        </HeaderBlock>
+      </CheckoutHeader>
+      {cartProducts.map((product) => (
+        <CheckoutProduct key={product.id} product={product} />
+      ))}
+      <Total>Total: {cartTotal} €</Total>
+    </CheckoutContainer>
+  );
 };
 
 export default Checkout;

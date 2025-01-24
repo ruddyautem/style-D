@@ -1,27 +1,28 @@
-import { createContext, useState, useEffect } from 'react';
-import { getCategoriesAndDocuments } from '../utils/firebase/firebase.utils.js';
+import { createContext, useState, useEffect } from "react";
+import { getCategoriesAndDocuments } from "../libs/firebase/firebase.utils.js";
 
 //as the actual value i want to access
 export const CategoriesContext = createContext({
-	categoriesMap: {}
+  categoriesMap: {},
 });
 
 export const CategoriesProvider = ({ children }) => {
-	const [ categoriesMap, setCategoriesMap ] = useState({});
+  const [categoriesMap, setCategoriesMap] = useState({});
 
-	useEffect(() => {
-		const getCategoriesMap = async () => {
-			const categoryMap = await getCategoriesAndDocuments();
-			setCategoriesMap(categoryMap);
-		};
-		getCategoriesMap();
-	}, []);
+  useEffect(() => {
+    const getCategoriesMap = async () => {
+      const categoryMap = await getCategoriesAndDocuments();
+      setCategoriesMap(categoryMap);
+    };
+    getCategoriesMap();
+  }, []);
 
-	const value = { categoriesMap };
+  const value = { categoriesMap };
 
-	return (
-		<CategoriesContext.Provider value={value}>
-			{children}
-		</CategoriesContext.Provider>
-	);
+  return (
+    <CategoriesContext.Provider value={value}>
+      {children}
+    </CategoriesContext.Provider>
+  );
 };
+

@@ -48,4 +48,6 @@ export const Name = styled.span`
 	margin-bottom: 15px;
 `;
 
-export const Price = styled.span`width: 10%;`;
+export const Price = styled.span`;`;
+
+
