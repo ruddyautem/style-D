@@ -1,31 +1,48 @@
 import React, { useEffect, useRef } from "react";
-import { CartIconContainer, ProductCount, ShoppingIcon } from "./cart-icon.styles";
+import {
+  CartIconContainer,
+  ProductCount,
+  ShoppingIcon,
+} from "./cart-icon.styles";
 import useCartStore from "../../stores/cartStore";
+import useUserStore from "../../stores/userStore";
 
 const CartIcon = () => {
-  const { isCartOpen, cartCount, setIsCartOpen } = useCartStore();
-  const cartRef = useRef(null);
-
-  const toggleIsCartOpen = () => setIsCartOpen(!isCartOpen);
+  const { currentUser } = useUserStore();
+  const { cartCount, resetLocalCart, isCartOpen, setIsCartOpen } =
+    useCartStore();
+  
+  const cartIconRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cartRef.current && !cartRef.current.contains(event.target)) {
+    if (currentUser) {
+      useUserStore.getState().setCurrentUser(currentUser);
+      useCartStore.getState().setUserId(currentUser.uid);
+    } else {
+      resetLocalCart();
+      console.log("Local cart reset triggered");
+    }
+  }, [currentUser, resetLocalCart]);
+
+  const toggleIsCartOpen = () => {
+    setIsCartOpen(!isCartOpen);
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (isCartOpen && cartIconRef.current && !cartIconRef.current.contains(event.target)) {
         setIsCartOpen(false);
       }
     };
 
-    if (isCartOpen) {
-      document.addEventListener("click", handleClickOutside);
-    } else {
-      document.removeEventListener("click", handleClickOutside);
-    }
-
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
   }, [isCartOpen, setIsCartOpen]);
 
   return (
-    <CartIconContainer ref={cartRef} onClick={toggleIsCartOpen}>
+    <CartIconContainer ref={cartIconRef} onClick={toggleIsCartOpen}>
       <ShoppingIcon />
       <ProductCount>{cartCount}</ProductCount>
     </CartIconContainer>

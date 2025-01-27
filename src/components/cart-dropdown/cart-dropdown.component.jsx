@@ -8,29 +8,35 @@ import {
   EmptyMessage,
 } from "./cart-dropdown.styles";
 import useCartStore from "../../stores/cartStore";
+import useUserStore from "../../stores/userStore";
 
 const CartDropdown = () => {
-  const cartProducts = useCartStore((state) => state.getCartProducts());
-  console.log('Current cart items:', cartProducts);
-
+  const cartProducts = useCartStore.getState().cartProducts;
+  const { currentUser } = useUserStore();
   const navigate = useNavigate();
 
-  const goToCheckoutHandler = () => {
-    navigate("/checkout");
+  const goToCheckoutOrAuth = () => {
+    useCartStore.getState().setIsCartOpen(false); // Close the cart
+    currentUser ? navigate("/checkout") : navigate("/auth");
+  };
+
+  const handleDropdownClick = (event) => {
+    event.stopPropagation(); // Prevent closing when clicking inside the dropdown
   };
 
   return (
-    <CartDropdownContainer>
+    <CartDropdownContainer onClick={handleDropdownClick}>
       <CartItems>
         {Array.isArray(cartProducts) && cartProducts.length ? (
-          cartProducts.map((item) => (
-            <CartItem key={item.id} cartItem={item} />
-          ))
+          cartProducts.map((item) => <CartItem key={item.id} cartItem={item} />)
         ) : (
           <EmptyMessage>VOTRE PANIER EST VIDE!</EmptyMessage>
         )}
       </CartItems>
-      <Button onClick={goToCheckoutHandler}>PAYER VOS ARTICLES</Button>
+
+      <Button onClick={goToCheckoutOrAuth}>
+        {currentUser ? "PAYER VOS ARTICLES" : "SE CONNECTER"}
+      </Button>
     </CartDropdownContainer>
   );
 };

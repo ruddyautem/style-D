@@ -1,99 +1,108 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import {
+  fetchUserCart,
+  saveCartToFirestore,
+  clearUserCart,
+  saveOrderToFirestore,
+  saveFailedOrderToFirestore,
+} from "../utils/firestoreInteractions";
 
-const useCartStore = create(
-  persist(
-    (set, get) => ({
-      isCartOpen: false,
-      cartProducts: [],
-      cartCount: 0,
-      cartTotal: 0,
+const useCartStore = create((set, get) => {
+  // Helper function to update cart state
+  const updateCartState = (cartItems) => {
+    const cartCount = cartItems.reduce((sum, p) => sum + p.quantity, 0);
+    const cartTotal = cartItems.reduce((sum, p) => sum + p.price * p.quantity, 0);
+    set({ cartProducts: cartItems, cartCount, cartTotal });
+  };
 
-      getCartProducts: () => get().cartProducts,
+  // Helper function to update Firestore cart
+  const updateFirestoreCart = async (cartItems) => {
+    const userId = get().userId;
+    if (userId) await saveCartToFirestore(userId, cartItems);
+  };
 
-      setIsCartOpen: (isOpen) => set({ isCartOpen: isOpen }),
+  // Helper function to ensure user is logged in before performing actions
+  const withUserCheck = (fn) => async (...args) => {
+    if (!get().userId) return;
+    await fn(...args);
+  };
 
-      addProductToCart: (productToAdd) =>
-        set(({ cartProducts, cartCount, cartTotal }) => {
-          console.log('Adding product to cart:', productToAdd);
-          const { id, name, imageUrl, price } = productToAdd;
-          
-          if (!id || !name || !imageUrl || !price) {
-            console.error('Incomplete product data:', productToAdd);
-            return { cartProducts, cartCount, cartTotal };
-          }
+  // Function to handle adding, removing, or clearing a product
+  const handleProductQuantity = async (product, action) => {
+    const { cartProducts } = get();
+    let updatedCart;
 
-          const existingProductIndex = cartProducts.findIndex(
-            (product) => product.id === id
-          );
+    switch (action) {
+      case "add":
+        updatedCart = cartProducts.some((p) => p.id === product.id)
+          ? cartProducts.map((p) =>
+              p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+            )
+          : [...cartProducts, { ...product, quantity: 1 }];
+        break;
 
-          if (existingProductIndex !== -1) {
-            return {
-              cartProducts: cartProducts.map((product, index) =>
-                index === existingProductIndex ? { ...product, quantity: product.quantity + 1 } : product
-              ),
-              cartCount: cartCount + 1,
-              cartTotal: cartTotal + price,
-            };
-          }
+      case "remove":
+        updatedCart = cartProducts
+          .map((p) => {
+            if (p.id === product.id) {
+              const newQuantity = p.quantity - 1;
+              return newQuantity > 0 ? { ...p, quantity: newQuantity } : null;
+            }
+            return p;
+          })
+          .filter(Boolean); // Remove products with null (quantity <= 0)
+        break;
 
-          return {
-            cartProducts: [
-              ...cartProducts,
-              {
-                id,
-                name,
-                imageUrl,
-                price,
-                quantity: 1,
-              },
-            ],
-            cartCount: cartCount + 1,
-            cartTotal: cartTotal + price,
-          };
-        }),
+      case "clear":
+        updatedCart = cartProducts.filter((p) => p.id !== product.id);
+        break;
 
-      removeProductFromCart: (productIdToRemove) =>
-        set(({ cartProducts, cartCount, cartTotal }) => {
-          const productToRemove = cartProducts.find(
-            (product) => product.id === productIdToRemove
-          );
-          return productToRemove.quantity > 1
-            ? {
-                cartProducts: cartProducts.map((product) =>
-                  product.id === productIdToRemove
-                    ? { ...product, quantity: product.quantity - 1 }
-                    : product
-                ),
-                cartCount: cartCount - 1,
-                cartTotal: cartTotal - productToRemove.price,
-              }
-            : {
-                cartProducts: cartProducts.filter(
-                  (product) => product.id !== productIdToRemove
-                ),
-                cartCount: cartCount - 1,
-                cartTotal: cartTotal - productToRemove.price,
-              };
-        }),
+      default:
+        return;
+    }
 
-      clearProductFromCart: (productIdToClear) =>
-        set(({ cartProducts, cartCount, cartTotal }) => {
-          const productToClear = cartProducts.find(
-            (product) => product.id === productIdToClear
-          );
-          return {
-            cartProducts: cartProducts.filter(
-              (product) => product.id !== productIdToClear
-            ),
-            cartCount: cartCount - productToClear.quantity,
-            cartTotal:
-              cartTotal - productToClear.price * productToClear.quantity,
-          };
-        }),
+    // Update local state
+    updateCartState(updatedCart);
+
+    // Update Firestore if user is logged in
+    await updateFirestoreCart(updatedCart);
+  };
+
+  return {
+    isCartOpen: false,
+    cartProducts: [],
+    cartCount: 0,
+    cartTotal: 0,
+    userId: null,
+    cartError: null,
+
+    setIsCartOpen: (isOpen) => set({ isCartOpen: isOpen }),
+
+    setUserId: async (id) => {
+      set({ userId: id });
+      if (id) {
+        try {
+          const cartItems = await fetchUserCart(id);
+          updateCartState(cartItems);
+        } catch (error) {
+          set({ cartError: "Erreur de chargement du panier" });
+        }
+      }
+    },
+
+    resetLocalCart: () => set({ cartProducts: [], cartCount: 0, cartTotal: 0 }),
+
+    handleProductQuantity,
+
+    saveOrder: withUserCheck(async (sessionId, cartItems) => {
+      await clearUserCart(get().userId);
+      await saveOrderToFirestore(get().userId, sessionId, cartItems);
     }),
-    { name: "cart-storage", getStorage: () => localStorage }
-  )
-);
+
+    failOrder: withUserCheck(async (sessionId, cartItems) => {
+      await saveFailedOrderToFirestore(get().userId, sessionId, cartItems);
+    }),
+  };
+});
 
 export default useCartStore;

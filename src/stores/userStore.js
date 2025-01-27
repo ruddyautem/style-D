@@ -1,8 +1,10 @@
-import { create } from 'zustand';
-import { onAuthStateChangedListener, createUserDocumentFromAuth } from '../libs/firebase/firebase.utils';
+// File: src/stores/UserStore.js
+
+import { create } from "zustand";
+import { onAuthStateChangedListener } from "../libs/firebase/firebase.utils";
+import useCartStore from "./cartStore";
 
 let unsubscribe;
-
 const useUserStore = create((set, get) => ({
   currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
@@ -10,11 +12,22 @@ const useUserStore = create((set, get) => ({
   initializeListener: () => {
     unsubscribe = onAuthStateChangedListener((user) => {
       if (user) {
-        createUserDocumentFromAuth(user);
+        set({ currentUser: user });
+        
+        // Retrieve the user's cart from sessionStorage
+        const cartData = JSON.parse(sessionStorage.getItem(`cart-${user.uid}`)) || [];
+        useCartStore.getState().setUserId(user.uid);
+        useCartStore.getState().setCartProducts(cartData);
+        
+      } else {
+        // Clear cart and session storage on logout
+        set({ currentUser: null });
+        useCartStore.getState().resetCart();
+        sessionStorage.removeItem(`cart-${get().userId}`);
       }
-      get().setCurrentUser(user);
     });
   },
+  
 
   cleanup: () => {
     if (unsubscribe) {
@@ -23,7 +36,6 @@ const useUserStore = create((set, get) => ({
   },
 }));
 
-// Automatically initialize the listener when the store is created
 useUserStore.getState().initializeListener();
 
 export default useUserStore;

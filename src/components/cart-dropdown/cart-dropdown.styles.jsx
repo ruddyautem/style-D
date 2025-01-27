@@ -29,7 +29,7 @@ export const EmptyMessage = styled.span`
 `;
 
 export const CartItems = styled.div`
-	height: 240px;
+	height: 280px;
 	display: flex;
 	flex-direction: column;
 	overflow-y: scroll;

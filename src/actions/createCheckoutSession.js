@@ -1,16 +1,40 @@
 import Stripe from "stripe";
+import useCartStore from "../stores/cartStore";
 
-const session = await Stripe.checkout.sessions.create({
-    line_items: [
-      {
-        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        price: '{{PRICE_ID}}',
-        quantity: 1,
-      },
-    ],
-    mode: 'payment',
-    success_url: `${YOUR_DOMAIN}?success=true`,
-    cancel_url: `${YOUR_DOMAIN}?canceled=true`,
+const stripe = new Stripe(process.env.REACT_APP_STRIPE_SECRET_KEY, {
+  apiVersion: "2024-12-18.acacia",
 });
 
-  res.redirect(303, session.url);
+export const createCheckoutSession = async (cartItems) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: cartItems.map((item) => ({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: item.name,
+            images: [item.imageUrl],
+          },
+          unit_amount: item.price * 100, // Convert to cents
+        },
+        quantity: item.quantity,
+      })),
+      mode: "payment",
+      success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${window.location.origin}/failure`,
+      locale: "fr",
+    });
+
+    // Save the order using the cart store function
+    useCartStore.getState().saveOrder(session.id, cartItems);
+
+    return session;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la création de la session de paiement :",
+      error
+    );
+    throw error;
+  }
+};

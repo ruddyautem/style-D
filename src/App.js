@@ -1,5 +1,4 @@
 import { Route, Routes } from "react-router-dom";
-import "./App";
 import Authentication from "./routes/authentication/authentication.component";
 import Checkout from "./routes/checkout/checkout.component";
 import Home from "./routes/home/home.component";
