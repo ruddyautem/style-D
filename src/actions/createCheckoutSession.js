@@ -1,5 +1,6 @@
 import Stripe from "stripe";
-import useCartStore from "../stores/cartStore";
+import useCartStore from "../stores/cartStore"; // Assuming this is where you manage user state
+import useUserStore from "../stores/userStore";
 
 const stripe = new Stripe(process.env.REACT_APP_STRIPE_SECRET_KEY, {
   apiVersion: "2024-12-18.acacia",
@@ -7,6 +8,20 @@ const stripe = new Stripe(process.env.REACT_APP_STRIPE_SECRET_KEY, {
 
 export const createCheckoutSession = async (cartItems) => {
   try {
+    const { currentUser } = useUserStore.getState(); // Get the current user from UserStore
+    const displayName = currentUser?.displayName || ""; // Get displayName from current user
+
+    if (!currentUser) {
+      throw new Error("User is not authenticated");
+    }
+
+    // Step 1: Create Customer with displayName and email
+    const customer = await stripe.customers.create({
+      name: displayName, // Use displayName as full name
+      email: currentUser.email, // User email from Firebase
+    });
+
+    // Step 2: Create Checkout Session tied to the created customer
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: cartItems.map((item) => ({
@@ -21,6 +36,7 @@ export const createCheckoutSession = async (cartItems) => {
         quantity: item.quantity,
       })),
       mode: "payment",
+      customer: customer.id, // Pass the customer ID here
       success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${window.location.origin}/failure`,
       locale: "fr",

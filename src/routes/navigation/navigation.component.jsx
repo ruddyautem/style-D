@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import CartIcon from "../../components/cart-icon/cart-icon.component";
 import CartDropdown from "../../components/cart-dropdown/cart-dropdown.component";
 
-import { ReactComponent as CrwnLogo } from "../../assets/crown.svg";
+import { ReactComponent as StyleD } from "../../assets/styled.svg";
 import { signOutUser } from "../../libs/firebase/firebase.utils";
 
 import {
@@ -28,8 +28,8 @@ const Navigation = () => {
     <Fragment>
       <NavigationContainer>
         <LogoContainer to='/'>
-          <CrwnLogo className='Logo' />
-          CRWN CLOTHING
+          STYLE
+          <StyleD className='Logo' />
         </LogoContainer>
 
         <NavLinks>

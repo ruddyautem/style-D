@@ -11,14 +11,15 @@ const useUserStore = create((set, get) => ({
 
   initializeListener: () => {
     unsubscribe = onAuthStateChangedListener((user) => {
+      console.log('Auth state changed. User:', user); // Debug log
       if (user) {
         set({ currentUser: user });
-        
+
         // Retrieve the user's cart from sessionStorage
         const cartData = JSON.parse(sessionStorage.getItem(`cart-${user.uid}`)) || [];
+        console.log('Cart data from sessionStorage:', cartData); // Debug log
         useCartStore.getState().setUserId(user.uid);
         useCartStore.getState().setCartProducts(cartData);
-        
       } else {
         // Clear cart and session storage on logout
         set({ currentUser: null });
@@ -27,7 +28,6 @@ const useUserStore = create((set, get) => ({
       }
     });
   },
-  
 
   cleanup: () => {
     if (unsubscribe) {

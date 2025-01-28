@@ -83,31 +83,23 @@ export const clearUserCart = async (userId) => {
 };
 
 // Save an order to Firestore
-export const saveOrderToFirestore = async (userId, sessionId, cartItems) => {
+export const saveOrderToFirestore = async (userId, sessionId, cartItems, paymentStatus) => {
   try {
-    await setDoc(doc(db, "users", userId, "orders", sessionId), {
-      sessionId,
-      items: cartItems,
-      status: "paid",
-      createdAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error("Error saving order:", error);
-    throw error;
-  }
-};
+    const orderId = sessionId.slice(6); // Remove the first 6 characters ("order_")
+    console.log("Generated orderId:", orderId); // Debugging
 
-// Save a failed order to Firestore
-export const saveFailedOrderToFirestore = async (userId, sessionId, cartItems) => {
-  try {
-    await setDoc(doc(db, "users", userId, "orders", sessionId), {
+    console.log("Saving order to Firestore with orderId:", orderId); // Debugging
+    await setDoc(doc(db, "users", userId, "orders", orderId), {
       sessionId,
       items: cartItems,
-      status: "failure",
+      payment: { status: paymentStatus },
       createdAt: serverTimestamp(),
     });
+
+    console.log("Order saved successfully with orderId:", orderId); // Debugging
+    return orderId; // Return the sliced orderId
   } catch (error) {
-    console.error("Error saving failed order:", error);
+    console.error(`Error saving ${paymentStatus} order:`, error);
     throw error;
   }
 };

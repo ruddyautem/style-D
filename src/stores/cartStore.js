@@ -4,7 +4,6 @@ import {
   saveCartToFirestore,
   clearUserCart,
   saveOrderToFirestore,
-  saveFailedOrderToFirestore,
 } from "../utils/firestoreInteractions";
 
 const useCartStore = create((set, get) => {
@@ -22,10 +21,10 @@ const useCartStore = create((set, get) => {
   };
 
   // Helper function to ensure user is logged in before performing actions
-  const withUserCheck = (fn) => async (...args) => {
-    if (!get().userId) return;
-    await fn(...args);
-  };
+const withUserCheck = (fn) => async (...args) => {
+  if (!get().userId) return; // Ensure user is logged in
+  return await fn(...args); // Return the result of the wrapped function
+};
 
   // Function to handle adding, removing, or clearing a product
   const handleProductQuantity = async (product, action) => {
@@ -76,9 +75,12 @@ const useCartStore = create((set, get) => {
     userId: null,
     cartError: null,
 
+    // Open/close cart
     setIsCartOpen: (isOpen) => set({ isCartOpen: isOpen }),
 
+    // Set user ID and fetch cart from Firestore
     setUserId: async (id) => {
+      console.log("Setting userId:", id); // Debugging
       set({ userId: id });
       if (id) {
         try {
@@ -90,18 +92,28 @@ const useCartStore = create((set, get) => {
       }
     },
 
+    // Reset local cart state
     resetLocalCart: () => set({ cartProducts: [], cartCount: 0, cartTotal: 0 }),
 
+    // Handle product quantity changes (add, remove, clear)
     handleProductQuantity,
 
+    // Save order to Firestore and clear cart
     saveOrder: withUserCheck(async (sessionId, cartItems) => {
+      console.log("Clearing user cart..."); // Debugging
       await clearUserCart(get().userId);
-      await saveOrderToFirestore(get().userId, sessionId, cartItems);
+    
+      console.log("Saving order to Firestore..."); // Debugging
+      const orderId = await saveOrderToFirestore(get().userId, sessionId, cartItems, "success");
+      console.log("Order ID after saving to Firestore:", orderId); // Debugging
+    
+      return orderId; // Ensure this returns the orderId
     }),
 
-    failOrder: withUserCheck(async (sessionId, cartItems) => {
-      await saveFailedOrderToFirestore(get().userId, sessionId, cartItems);
-    }),
+    // Set cart products directly (used by UserStore)
+    setCartProducts: (products) => {
+      updateCartState(products);
+    },
   };
 });
 
