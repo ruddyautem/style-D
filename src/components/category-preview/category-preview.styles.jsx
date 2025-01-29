@@ -9,7 +9,7 @@ export const CategoryPreviewContainer = styled.div`
 
 export const Title = styled(Link)`
   font-size: 28px;
-  margin-bottom: 25px;
+  margin-bottom: 35px;
   cursor: pointer;
 `;
 

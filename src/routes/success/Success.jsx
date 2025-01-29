@@ -42,7 +42,7 @@ const Success = () => {
   if (!orderId)
     return (
       <Container>
-        <Title>Vérification du Panier</Title>
+        <Title>TRAITEMENT DE VOTRE PAIEMENT EN COURS...</Title>
       </Container>
     );
 
@@ -52,9 +52,7 @@ const Success = () => {
       <OrderNumber>
         Numéro de commande : <span>{orderId}</span>
       </OrderNumber>
-      <Message>
-       Elle est bien prise en compte et sera bientôt traitée.
-      </Message>
+      <Message>Elle est bien prise en compte et sera bientôt traitée.</Message>
       <Button buttonType='base' onClick={() => navigate("/")}>
         Retourner à l'accueil
       </Button>

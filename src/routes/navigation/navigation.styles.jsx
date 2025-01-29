@@ -13,18 +13,18 @@ export const LogoContainer = styled(Link)`
   display: flex;
   height: 100%;
   width: auto;
-  gap: 10px;
+  gap: 5px;
   align-items: center;
   padding: 0 20px;
 
   svg {
-    width: 40px;  /* Adjust the logo size */
+    width: 40px; /* Adjust the logo size */
     height: auto;
   }
 
   span {
-    white-space: nowrap;  /* Prevents text from breaking into multiple lines */
-    font-size: 1.2rem;    /* Adjust font size if needed */
+    white-space: nowrap; /* Prevents text from breaking into multiple lines */
+    font-size: 1.2rem; /* Adjust font size if needed */
     font-weight: bold;
   }
 `;

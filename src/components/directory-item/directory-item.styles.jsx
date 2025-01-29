@@ -51,10 +51,10 @@ export const DirectoryItemContainer = styled.div`
   margin: 0 7.5px 15px;
   overflow: hidden;
 
-      ${BackgroundImage} {
-      transform: scale(1);
-      transition: transform 0.3s cubic-bezier(0.25, 0.45, 0.45, 0.95);
-    }
+  ${BackgroundImage} {
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(0.25, 0.45, 0.45, 0.95);
+  }
 
   &:hover {
     cursor: pointer;
