@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install SSH Keys
+      run: |
+        install -m 600 -D /dev/null ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy and Restart PM2
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          set -e  # Exit immediately if any command fails
+
+          # Ajouter Bun au PATH (exact same as your original)
+          export PATH=\"/root/.bun/bin:\$PATH\"
+
+          # Aller dans le nouveau dossier du projet (seule modification)
+          cd /home/autem-style-d/htdocs/style-d.autem.dev || exit 1
+
+          # Nettoyer et mettre à jour (exact same as your original)
+          rm -rf .next
+          git pull origin main
+
+          # Installer les dépendances et builder (exact same)
+          bun install
+          bun run build
+
+          # Redémarrer PM2 (exact same config file name)
+          pm2 reload pm2.config.cjs --update-env
+          pm2 save
+        "
+
+    - name: Cleanup SSH Keys
+      run: rm -rf ~/.ssh
