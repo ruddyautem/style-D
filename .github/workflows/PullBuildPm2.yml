@@ -1,4 +1,4 @@
-name: Deploy to VPS
+name: Deploy to VPS - Style D
 
 on:
   push:
@@ -12,35 +12,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install SSH Keys
-      run: |
-        install -m 600 -D /dev/null ~/.ssh/id_rsa
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      # Step 1: SSH Setup
+      - name: Install SSH Private Key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
 
-    - name: Deploy and Restart PM2
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-          set -e  # Exit immediately if any command fails
+      - name: Add SSH Host to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-          # Ajouter Bun au PATH (exact same as your original)
-          export PATH=\"/root/.bun/bin:\$PATH\"
+      # Step 2: Clean previous build
+      - name: Clean Previous Build
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
+            rm -rf .next
+          "
 
-          # Aller dans le nouveau dossier du projet (seule modification)
-          cd /home/autem-style-d/htdocs/style-d.autem.dev || exit 1
+      # Step 3: Git Operations
+      - name: Pull Latest Code
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
+            git pull origin main
+          "
 
-          # Nettoyer et mettre à jour (exact same as your original)
-          rm -rf .next
-          git pull origin main
+      # Step 4: Dependency Management
+      - name: Install Dependencies with Bun
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            export PATH=\"/root/.bun/bin:\$PATH\"
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
+            bun install
+          "
 
-          # Installer les dépendances et builder (exact same)
-          bun install
-          bun run build
+      # Step 5: Build Project
+      - name: Build Project
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            export PATH=\"/root/.bun/bin:\$PATH\"
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
+            bun run build
+          "
 
-          # Redémarrer PM2 (exact same config file name)
-          pm2 reload pm2.config.cjs --update-env
-          pm2 save
-        "
+      # Step 6: PM2 Reload
+      - name: Reload PM2 Process
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
+            pm2 reload pm2.config.cjs --update-env
+            pm2 save
+          "
 
-    - name: Cleanup SSH Keys
-      run: rm -rf ~/.ssh
+      # Step 7: Cleanup
+      - name: Cleanup SSH Keys
+        run: rm -rf ~/.ssh
