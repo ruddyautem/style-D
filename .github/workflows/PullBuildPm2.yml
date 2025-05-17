@@ -2,69 +2,38 @@ name: Deploy to VPS - Style D
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    env:
+      WORKING_DIR: /home/autem-style-d/htdocs/style-d.autem.dev
+      SSH_CMD: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
     steps:
-      # Step 1: SSH Setup
-      - name: Install SSH Private Key
+      # 1. Combined SSH setup
+      - name: Configure SSH
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-
-      - name: Add SSH Host to known_hosts
-        run: |
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      # Step 2: Clean previous build
-      - name: Clean Previous Build
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd /home/autem-style-d/htdocs/style-d.autem.dev
-            rm -rf .next
-          "
+      # 2. Deployment commands
+      - name: Clean build
+        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && rm -rf .next"
 
-      # Step 3: Git Operations
-      - name: Pull Latest Code
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd /home/autem-style-d/htdocs/style-d.autem.dev
-            git pull origin main
-          "
+      - name: Git pull
+        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && git pull origin main"
 
-      # Step 4: Dependency Management
-      - name: Install Dependencies with Bun
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            export PATH=\"/root/.bun/bin:\$PATH\"
-            cd /home/autem-style-d/htdocs/style-d.autem.dev
-            bun install
-          "
+      - name: Install & build
+        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && export PATH=\"/root/.bun/bin:\$PATH\" && bun install && bun run build"
 
-      # Step 5: Build Project
-      - name: Build Project
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            export PATH=\"/root/.bun/bin:\$PATH\"
-            cd /home/autem-style-d/htdocs/style-d.autem.dev
-            bun run build
-          "
+      - name: PM2 reload
+        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && pm2 reload pm2.config.cjs --update-env && pm2 save"
 
-      # Step 6: PM2 Reload
-      - name: Reload PM2 Process
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd /home/autem-style-d/htdocs/style-d.autem.dev
-            pm2 reload pm2.config.cjs --update-env
-            pm2 save
-          "
-
-      # Step 7: Cleanup
-      - name: Cleanup SSH Keys
+      # 3. Cleanup
+      - name: Remove SSH keys
         run: rm -rf ~/.ssh
