@@ -14,26 +14,29 @@ jobs:
       SSH_CMD: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
     steps:
-      # 1. Combined SSH setup
+      # 1. Configure SSH
       - name: Configure SSH
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      # 2. Deployment commands
+      # 2. Clean build folder with proper user permissions
       - name: Clean build
-        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && rm -rf .next"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'rm -rf $WORKING_DIR/.next'"
 
+      # 3. Pull latest code as ruddya
       - name: Git pull
-        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && git pull origin main"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd $WORKING_DIR && git pull origin main'"
 
+      # 4. Install dependencies and build as ruddya with Bun path
       - name: Install & build
-        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && export PATH=\"/root/.bun/bin:\$PATH\" && bun install && bun run build"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd $WORKING_DIR && bun install && bun run build'"
 
+      # 5. Reload PM2 as ruddya
       - name: PM2 reload
-        run: ${{ env.SSH_CMD }} "cd ${{ env.WORKING_DIR }} && pm2 reload pm2.config.cjs --update-env && pm2 save"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd $WORKING_DIR && pm2 reload pm2.config.cjs --update-env && pm2 save'"
 
-      # 3. Cleanup
+      # 6. Cleanup SSH keys locally
       - name: Remove SSH keys
         run: rm -rf ~/.ssh
