@@ -21,22 +21,26 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      # 2. Clean build folder with proper user permissions
+      # 2. Clean Vite build folder
       - name: Clean build
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'rm -rf $WORKING_DIR/.next'"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'rm -rf \$WORKING_DIR/build'"
 
-      # 3. Pull latest code as ruddya
+      # 3. Pull latest code
       - name: Git pull
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd $WORKING_DIR && git pull origin main'"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd \$WORKING_DIR && git pull origin main'"
 
-      # 4. Install dependencies and build as ruddya with Bun path
-      - name: Install & build
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd $WORKING_DIR && bun install && bun run build'"
+      # 4. Install dependencies with Bun
+      - name: Install dependencies
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd \$WORKING_DIR && bun install'"
 
-      # 5. Reload PM2 as ruddya
+      # 5. Build with Vite
+      - name: Build Vite app
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd \$WORKING_DIR && bun run build'"
+
+      # 6. Reload PM2
       - name: PM2 reload
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd $WORKING_DIR && pm2 reload pm2.config.cjs --update-env && pm2 save'"
+        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd \$WORKING_DIR && pm2 reload pm2.config.cjs --update-env && pm2 save'"
 
-      # 6. Cleanup SSH keys locally
+      # 7. Cleanup SSH keys
       - name: Remove SSH keys
         run: rm -rf ~/.ssh
