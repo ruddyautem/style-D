@@ -9,38 +9,33 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIR: /home/autem-style-d/htdocs/style-d.autem.dev
-      SSH_CMD: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
     steps:
-      # 1. Configure SSH
-      - name: Configure SSH
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id_rsa
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/autem-style-d/htdocs/style-d.autem.dev
 
-      # 2. Clean Vite build folder
-      - name: Clean build
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'rm -rf \$WORKING_DIR/build'"
+            echo "🧹 Cleaning build..."
+            rm -rf build
 
-      # 3. Pull latest code
-      - name: Git pull
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd \$WORKING_DIR && git pull origin main'"
+            echo "📥 Pulling latest code..."
+            git pull origin main
 
-      # 4. Install dependencies with Bun
-      - name: Install dependencies
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd \$WORKING_DIR && bun install'"
+            echo "📦 Installing dependencies..."
+            export PATH=/home/ruddya/.bun/bin:\$PATH
+            bun install
 
-      # 5. Build with Vite
-      - name: Build Vite app
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'export PATH=/home/ruddya/.bun/bin:\$PATH && cd \$WORKING_DIR && bun run build'"
+            echo "🔨 Building..."
+            bun run build
 
-      # 6. Reload PM2
-      - name: PM2 reload
-        run: ${{ env.SSH_CMD }} "sudo -u ruddya bash -c 'cd \$WORKING_DIR && pm2 reload pm2.config.cjs --update-env && pm2 save'"
+            echo "🔄 Reloading PM2..."
+            pm2 reload pm2.config.cjs --update-env
+            pm2 save
 
-      # 7. Cleanup SSH keys
-      - name: Remove SSH keys
-        run: rm -rf ~/.ssh
+            echo "✅ DEPLOY SUCCESS"
