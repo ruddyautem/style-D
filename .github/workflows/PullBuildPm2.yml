@@ -19,23 +19,24 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            export PATH=/home/ruddya/.bun/bin:/usr/bin:\$PATH
+            
             cd /home/autem-style-d/htdocs/style-d.autem.dev
-
+            
             echo "🧹 Cleaning build..."
             rm -rf build
-
+            
             echo "📥 Pulling latest code..."
             git pull origin main
-
+            
             echo "📦 Installing dependencies..."
-            export PATH=/home/ruddya/.bun/bin:\$PATH
             bun install
-
+            
             echo "🔨 Building..."
             bun run build
-
+            
             echo "🔄 Reloading PM2..."
-            pm2 reload pm2.config.cjs --update-env
+            pm2 reload pm2.config.cjs --update-env || pm2 start pm2.config.cjs
             pm2 save
-
+            
             echo "✅ DEPLOY SUCCESS"
