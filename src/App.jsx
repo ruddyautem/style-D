@@ -10,6 +10,7 @@ import useUserStore from "./stores/userStore";
 
 const App = () => {
   useUserStore.getState().initializeListener();
+  
   return (
     <Routes>
       <Route path='/' element={<Navigation />}>

@@ -3,8 +3,7 @@ import { Outlet } from "react-router-dom";
 
 import CartIcon from "../../components/cart-icon/cart-icon.component";
 import CartDropdown from "../../components/cart-dropdown/cart-dropdown.component";
-
-import { ReactComponent as StyleD } from "../../assets/styled.svg";
+import StyleD from "../../assets/styled.svg?react"
 import { signOutUser } from "../../libs/firebase/firebase.utils";
 
 import {

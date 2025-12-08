@@ -5,10 +5,10 @@ import Button from "../button/button.component";
 
 import {
   createAuthUserWithEmailAndPassword,
-  createUserDocumentFromAuth,
 } from "../../libs/firebase/firebase.utils.js";
 
 import { SignUpContainer } from "./sign-up-form.styles.jsx";
+import { createUserDocumentFromAuth } from "../../utils/firestoreInteractions.js";
 
 const defaultFormFields = {
   displayName: "",

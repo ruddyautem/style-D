@@ -5,7 +5,7 @@ import Button, { BUTTON_TYPE_CLASSES } from "../button/button.component";
 import FormInput from "../form-input/form-input.component";
 
 import {
-  signInAuthUserWithEmailAndPassword,
+
   signInWithGooglePopup
 } from "../../libs/firebase/firebase.utils.js";
 
@@ -38,10 +38,7 @@ const SignInForm = () => {
     event.preventDefault();
 
     try {
-      const { user } = await signInAuthUserWithEmailAndPassword(
-        email,
-        password
-      );
+
       navigate("/");
     } catch (error) {
       switch (error.code) {
@@ -62,41 +59,6 @@ const SignInForm = () => {
 
     setFormFields({ ...formFields, [name]: value });
   };
-
-  //   const addShopData = async () => {
-  //     const categoriesCollectionRef = collection(db, "categories");
-
-  //     SHOP_DATA.forEach(async (category) => {
-  //       const categoryDocRef = doc(
-  //         categoriesCollectionRef,
-  //         category.title.toLowerCase()
-  //       );
-  //       await setDoc(categoryDocRef, { ...category });
-
-  //       console.log(`Added ${category.title} category`);
-
-  //       category.items.forEach(async (item) => {
-  //         const itemDocRef = doc(
-  //           collection(db, `${category.title.toLowerCase()}/items`)
-  //         );
-  //         await setDoc(itemDocRef, { ...item });
-
-  //         console.log(`Added ${item.name} item`);
-  //       });
-  //     });
-
-  //     console.log("All shop data added successfully");
-  //   };
-
-  //   const handlePopulateDb = async () => {
-  //     try {
-  //       await addShopData();
-  //       alert("Database populated successfully!");
-  //     } catch (error) {
-  //       console.error("Error populating database:", error);
-  //       alert(`Failed to populate database: ${error.message}`);
-  //     }
-  //   };
 
   return (
     <SignUpContainer>

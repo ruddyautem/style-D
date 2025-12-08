@@ -1,6 +1,7 @@
 // stores/categoriesStore.js
 import { create } from "zustand";
-import { getCategoriesAndDocuments } from "../libs/firebase/firebase.utils.js";
+import { getCategoriesAndDocuments } from "../utils/firestoreInteractions";
+
 
 const useCategoriesStore = create((set) => ({
   categoriesMap: {},

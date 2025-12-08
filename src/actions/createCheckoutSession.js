@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import useCartStore from "../stores/cartStore"; // Assuming this is where you manage user state
 import useUserStore from "../stores/userStore";
 
-const stripe = new Stripe(process.env.REACT_APP_STRIPE_SECRET_KEY, {
+const stripe = new Stripe(import.meta.env.VITE_STRIPE_SECRET_KEY, {
   apiVersion: "2024-12-18.acacia",
 });
 

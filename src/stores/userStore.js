@@ -1,41 +1,104 @@
-// File: src/stores/UserStore.js
-
 import { create } from "zustand";
 import { onAuthStateChangedListener } from "../libs/firebase/firebase.utils";
 import useCartStore from "./cartStore";
+import {
+  createUserDocumentFromAuth,
+  fetchUserCart,
+} from "../utils/firestoreInteractions";
 
 let unsubscribe;
-const useUserStore = create((set, get) => ({
+
+const useUserStore = create((set) => ({
   currentUser: null,
-  setCurrentUser: (user) => set({ currentUser: user }),
+  isInitializing: true,
 
-  initializeListener: () => {
-    unsubscribe = onAuthStateChangedListener((user) => {
-      console.log('Auth state changed. User:', user); // Debug log
-      if (user) {
-        set({ currentUser: user });
-
-        // Retrieve the user's cart from sessionStorage
-        const cartData = JSON.parse(sessionStorage.getItem(`cart-${user.uid}`)) || [];
-        console.log('Cart data from sessionStorage:', cartData); // Debug log
-        useCartStore.getState().setUserId(user.uid);
-        useCartStore.getState().setCartProducts(cartData);
-      } else {
-        // Clear cart and session storage on logout
-        set({ currentUser: null });
-        useCartStore.getState().resetCart();
-        sessionStorage.removeItem(`cart-${get().userId}`);
-      }
+  // More robust setCurrentUser method
+  setCurrentUser: (user) => {
+    set({
+      currentUser: user,
+      isInitializing: false,
     });
   },
 
+  setIsInitializing: (value) => set({ isInitializing: value }),
+
+  initializeListener: async () => {
+    // Ensure only one listener is active
+    if (!unsubscribe) {
+      unsubscribe = onAuthStateChangedListener(async (user) => {
+        try {
+          if (user) {
+            await handleUserLogin(user);
+          } else {
+            handleUserLogout();
+          }
+        } catch (error) {
+          console.error("Authentication state change error:", error);
+        }
+      });
+    }
+  },
+
   cleanup: () => {
+    // Prevent multiple unsubscriptions
     if (unsubscribe) {
-      unsubscribe();
+      try {
+        unsubscribe();
+      } finally {
+        set({ isInitializing: true });
+      }
+      
+      unsubscribe = null;
     }
   },
 }));
 
+
+// Login handler
+const handleUserLogin = async (user) => {
+  const { setUserId, setCartProducts } = useCartStore.getState();
+
+  console.log("User logged in:", user);
+
+  try {
+    await createUserDocumentFromAuth(user, {
+      displayName: user.displayName || user.email || "",
+    });
+
+    const cartData = await fetchUserCart(user.uid);
+
+    // Use set method
+    useUserStore.getState().setCurrentUser({
+      ...user,
+      isFirstLogin: true,
+      displayName: user.displayName,
+    });
+
+    setUserId(user.uid);
+
+    if (cartData && cartData.length > 0) {
+      setCartProducts(cartData);
+    }
+  } catch (error) {
+    console.error("Error during user login handling:", error);
+  }
+
+  // Reset initializing flag after successful login
+  useUserStore.getState().setIsInitializing(false);
+};
+
+// Logout handler
+const handleUserLogout = () => {
+  const { resetLocalCart } = useCartStore.getState();
+
+  
+  useUserStore.getState().setCurrentUser(null);
+  resetLocalCart(); // Ne touche que le state local
+
+  useUserStore.getState().setIsInitializing(true);
+};
+
+// Initialize listener and cleanup on component mount/unmount
 useUserStore.getState().initializeListener();
 
 export default useUserStore;
