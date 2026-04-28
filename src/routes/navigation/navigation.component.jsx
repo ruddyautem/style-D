@@ -1,10 +1,11 @@
 import { Fragment } from "react";
 import { Outlet } from "react-router-dom";
-
 import CartIcon from "../../components/cart-icon/cart-icon.component";
 import CartDropdown from "../../components/cart-dropdown/cart-dropdown.component";
-import StyleD from "../../assets/styled.svg?react"
+import StyleD from "../../assets/styled.svg?react";
 import { signOutUser } from "../../libs/firebase/firebase.utils";
+import useUserStore from "../../stores/userStore";
+import useCartStore from "../../stores/cartStore";
 
 import {
   NavigationContainer,
@@ -12,34 +13,25 @@ import {
   NavLink,
   LogoContainer,
 } from "./navigation.styles";
-import useUserStore from "../../stores/userStore";
-import useCartStore from "../../stores/cartStore";
 
 const Navigation = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const { isCartOpen } = useCartStore();
 
-  const signOutHandler = async () => {
-    await signOutUser();
-  };
-
   return (
     <Fragment>
       <NavigationContainer>
         <LogoContainer to='/'>
-          STYLE
-          <StyleD className='Logo' />
+          <span>STYLE</span>
+          <StyleD />
         </LogoContainer>
 
         <NavLinks>
-          <NavLink to='/shop'>TOUS LES ARTICLES</NavLink>
+          <NavLink to='/shop'>Boutique</NavLink>
           {currentUser ? (
-            <NavLink as='span' onClick={signOutHandler}>
-              {" "}
-              SE DÉCONNECTER
-            </NavLink>
+            <NavLink as='span' onClick={signOutUser}>Déconnexion</NavLink>
           ) : (
-            <NavLink to='/auth'>SE CONNECTER</NavLink>
+            <NavLink to='/auth'>Connexion</NavLink>
           )}
           <CartIcon />
         </NavLinks>

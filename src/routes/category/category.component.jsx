@@ -11,31 +11,29 @@ const Category = () => {
   const { categoriesMap, isLoading, fetchCategories } = useCategoriesStore();
 
   useEffect(() => {
-    isLoading && fetchCategories();
-  }, [fetchCategories, isLoading]);
-
-  console.log("Category:", category);
-  console.log("Categories Map:", categoriesMap);
+    if (Object.keys(categoriesMap).length === 0) {
+      fetchCategories();
+    }
+  }, [fetchCategories, categoriesMap]);
 
   const products = categoriesMap[category];
 
-  console.log("Products for category:", products);
-
   return (
-    <>
-      <CategoryTitle>{category.toUpperCase()}</CategoryTitle>
-      <CategoryContainer>
-        {isLoading ? (
-          <IsLoading>Chargement des articles...</IsLoading>
-        ) : products && products.length > 0 ? (
-          products.map((product) => (
+    <div style={{ paddingBottom: '100px' }}>
+      <CategoryTitle>{category}</CategoryTitle>
+      {isLoading ? (
+        <IsLoading style={{ textAlign: 'center', width: '100%' }}>
+          Chargement des articles...
+        </IsLoading>
+      ) : (
+        <CategoryContainer>
+          {products?.map((product) => (
             <ProductCard key={product.id} product={product} />
-          ))
-        ) : (
-          <p>Aucun article disponible dans cette catégorie.</p>
-        )}
-      </CategoryContainer>
-    </>
+          ))}
+          {!products && <p>Aucun article disponible.</p>}
+        </CategoryContainer>
+      )}
+    </div>
   );
 };
 

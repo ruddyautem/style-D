@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ProductCardContainer,
@@ -11,38 +12,54 @@ import useUserStore from '../../stores/userStore.js';
 
 const ProductCard = ({ product }) => {
   const { name, price, imageUrl } = product;
-  const { handleProductQuantity } = useCartStore(); // Use handleProductQuantity from cartStore
-  const { currentUser } = useUserStore();
+  const [isAdded, setIsAdded] = useState(false);
   
+  const { handleProductQuantity } = useCartStore();
+  const { currentUser } = useUserStore();
   const navigate = useNavigate();
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    
     if (!currentUser) {
-      // Navigate to the auth page if not logged in
       navigate("/auth");
-    } else {
-      // Use handleProductQuantity to add the product (+1 quantity)
-      await handleProductQuantity(
-        { id: product.id, name, imageUrl, price },
-        "add"
-      );
+      return;
     }
+
+    // Trigger the "Added" state
+    setIsAdded(true);
+
+    await handleProductQuantity(
+      { id: product.id, name, imageUrl, price },
+      "add"
+    );
+
+    // Reset button text after 2 seconds
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
   };
 
-  const buttonText = currentUser ? "Ajouter au Panier" : "Se connecter pour ajouter au panier";
+  // Logic for dynamic button text
+  const getButtonText = () => {
+    if (isAdded) return "Ajouté !";
+    if (!currentUser) return "Se Connecter";
+    return "Ajouter au panier";
+  };
 
   return (
     <ProductCardContainer>
-      <img src={imageUrl} alt={`${name}`} />
+      <img src={imageUrl} alt={name} loading="lazy" />
       <Footer>
         <Name>{name}</Name>
-        <Price>{price} €</Price>
+        <Price>{price}€</Price>
       </Footer>
       <Button
-        buttonType={BUTTON_TYPE_CLASSES.inverted}
+        buttonType={isAdded ? BUTTON_TYPE_CLASSES.base : BUTTON_TYPE_CLASSES.inverted}
         onClick={handleAddToCart}
+        disabled={isAdded} // Optional: disable while showing "Added" to prevent double-clicks
       >
-        {buttonText}
+        {getButtonText()}
       </Button>
     </ProductCardContainer>
   );

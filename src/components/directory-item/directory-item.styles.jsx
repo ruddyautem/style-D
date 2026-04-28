@@ -5,76 +5,66 @@ export const BackgroundImage = styled.div`
   height: 100%;
   background-size: cover;
   background-position: center;
-  
   background-image: ${({ $imageUrl }) => `url(${$imageUrl})`};
+  transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
 `;
 
 export const Body = styled.div`
   position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   padding: 40px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  color: white;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
+  justify-content: flex-end;
+  align-items: flex-start;
+  transition: transform 0.4s ease;
+  transform: translateY(10px);
 
   h2 {
-    font-weight: bold;
-    margin: 0 0 5px;
-    font-size: 20px;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 300;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    text-align: right;
-    width: 100%;
+    letter-spacing: 3px;
+    margin: 0;
   }
 
   p {
-    font-weight: normal;
-    font-size: 16px;
-    margin: 0;
-    opacity: 0.8;
-    text-align: center;
-    width: 100%;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 10px;
+    opacity: 0.7;
+    
+    &::after {
+      content: ' →';
+    }
   }
 `;
 
 export const DirectoryItemContainer = styled.div`
-  height: 500px;
-  min-width: 25%;
   flex: 1 1 auto;
   display: flex;
-  -moz-box-align: center;
   align-items: center;
   justify-content: center;
-  border: 1px solid black;
-  margin: 0 7.5px 15px;
   overflow: hidden;
-
-  ${BackgroundImage} {
-    transform: scale(1);
-    transition: transform 0.3s cubic-bezier(0.25, 0.45, 0.45, 0.95);
-  }
+  position: relative;
+  background-color: #fff;
 
   &:hover {
     cursor: pointer;
 
     ${BackgroundImage} {
-      transform: scale(1.1);
-      transition: transform 0.6s cubic-bezier(0.25, 0.45, 0.45, 0.95);
+      transform: scale(1.05);
     }
 
     ${Body} {
-      opacity: 1;
+      transform: translateY(0);
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
     }
-  }
-
-  &:first-child {
-    margin-right: 7.5px;
-  }
-
-  &:last-child {
-    margin-left: 7.5px;
   }
 `;

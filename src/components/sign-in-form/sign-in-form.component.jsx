@@ -21,9 +21,6 @@ const SignInForm = () => {
   const { email, password } = formFields;
   const navigate = useNavigate();
 
-  // const resetFormFields = () => {
-  //   setFormFields(defaultFormFields);
-  // };
 
   const signInWithGoogle = async () => {
     try {

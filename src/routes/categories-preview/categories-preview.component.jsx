@@ -7,21 +7,29 @@ const CategoriesPreview = () => {
   const { categoriesMap, isLoading, fetchCategories } = useCategoriesStore();
 
   useEffect(() => {
-    isLoading && fetchCategories();
-  }, [fetchCategories, isLoading]);
+    // Only fetch if map is empty
+    if (Object.keys(categoriesMap).length === 0) {
+      fetchCategories();
+    }
+  }, [fetchCategories, categoriesMap]);
 
-  console.log("Categories Map:", categoriesMap);
-
-  return isLoading ? (
-    <IsLoading>Chargement des articles...</IsLoading>
-  ) : (
-    Object.keys(categoriesMap).map((title) => (
-      <CategoryPreview
-        key={title}
-        title={title}
-        products={categoriesMap[title]}
-      />
-    ))
+  return (
+    <div style={{ padding: '20px 0' }}>
+      {isLoading ? (
+        <IsLoading>Chargement de la collection...</IsLoading>
+      ) : (
+        Object.keys(categoriesMap).map((title) => {
+          const products = categoriesMap[title];
+          return (
+            <CategoryPreview
+              key={title}
+              title={title}
+              products={products}
+            />
+          );
+        })
+      )}
+    </div>
   );
 };
 
