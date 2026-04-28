@@ -23,19 +23,34 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
+// Auth
+export const auth = getAuth(firebaseApp);
+
+// Firestore
+export const db = getFirestore(firebaseApp);
+
 // Google Auth Provider
-const googleProvider = new GoogleAuthProvider();
+export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
-// Auth instance
-export const auth = getAuth();
+// Inside firebase.utils.js, replace the DEV block with this:
+if (import.meta.env.DEV) {
+  Object.defineProperty(db, '_settings', {
+    value: {
+      ...db._settings,
+      experimentalForceLongPolling: true,
+      experimentalAutoDetectLongPolling: true,
+    },
+    writable: true,
+  });
 
-// Firestore instance
-export const db = getFirestore(firebaseApp);
+  console.log("🔧 Firestore v12: Long polling + auto detect enabled");
+}
 
 // Authentication methods
 export const signInWithGooglePopup = () =>
   signInWithPopup(auth, googleProvider);
+
 export const signInWithGoogleRedirect = () =>
   signInWithRedirect(auth, googleProvider);
 

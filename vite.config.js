@@ -19,12 +19,4 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    port: 3002,
-    open: true,
-    allowedHosts: ["style-d.autem.dev"],
-  },
-  build: {
-    outDir: "build",
-  },
 });
