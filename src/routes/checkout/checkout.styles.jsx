@@ -71,7 +71,7 @@ export const InfoCBContainer = styled.div`
   margin-top: 50px;
   padding: 20px;
   background-color: #f9f9f9;
-  border-left: 2px solid #000;
+  border-left: 2px solid #ff0000;
   font-size: 0.8rem;
   letter-spacing: 1px;
   color: #555;
@@ -81,6 +81,6 @@ export const InfoCB = styled.span`
   margin-top: 10px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #000;
+  color: #ff0000;
   font-family: monospace;
 `;

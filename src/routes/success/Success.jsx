@@ -1,43 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Container, Title, Message, OrderNumber } from "./Success.styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/button/button.component";
 
 const Success = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { userId, cartProducts, saveOrder, resetLocalCart } = useCartStore();
   const [orderId, setOrderId] = useState(null);
+  const [error, setError] = useState(null);
+  
+  // Use a ref to prevent double-saving in StrictMode
+  const hasSavedOrder = useRef(false);
 
   useEffect(() => {
-    const checkCart = async () => {
-      if (orderId || !userId || cartProducts.length === 0) return;
+    const processOrder = async () => {
+      // Get session_id from URL
+      const searchParams = new URLSearchParams(location.search);
+      const sessionId = searchParams.get("session_id");
+
+      if (!sessionId) {
+        setError("No session ID found.");
+        return;
+      }
+
+      // If we already saved this order in a previous render, don't do it again
+      if (hasSavedOrder.current) return;
+
+      if (!userId || cartProducts.length === 0) {
+        // We might be waiting for auth to initialize or cart to fetch.
+        // If they just navigated here manually with an empty cart, they won't get an order.
+        return;
+      }
+
+      hasSavedOrder.current = true;
 
       try {
-        const sessionId = `order_${Date.now()}`;
-        const orderId = await saveOrder(sessionId, cartProducts);
-        if (orderId) {
-          setOrderId(orderId);
+        const savedOrderId = await saveOrder(sessionId, cartProducts);
+        if (savedOrderId) {
+          setOrderId(savedOrderId);
           resetLocalCart();
         }
-      } catch (error) {
-        console.error("Error saving order:", error);
+      } catch (err) {
+        console.error("Error saving order:", err);
+        setError("Failed to save order.");
       }
     };
 
-    const timer = setTimeout(checkCart, 2000); // Initial delay before checking
-    return () => clearTimeout(timer); // Cleanup timeout on unmount or dependency change
-  }, [userId, cartProducts, saveOrder, resetLocalCart, orderId]);
+    processOrder();
+  }, [userId, cartProducts, saveOrder, resetLocalCart, location.search]);
 
   useEffect(() => {
     const redirectTimer = setTimeout(() => {
-      if (!orderId) {
-        navigate("/"); // Redirect to home if no orderId after 2 seconds
+      if (!orderId && error) {
+        navigate("/");
       }
     }, 5000);
 
-    return () => clearTimeout(redirectTimer); // Cleanup the timer on unmount or when orderId changes
-  }, [orderId, navigate]);
+    return () => clearTimeout(redirectTimer);
+  }, [orderId, error, navigate]);
+
+  if (error) {
+    return (
+      <Container>
+        <Title>Erreur</Title>
+        <Message>{error}</Message>
+        <Button buttonType='base' onClick={() => navigate("/")}>
+          Retourner à l'accueil
+        </Button>
+      </Container>
+    );
+  }
 
   if (!orderId)
     return (

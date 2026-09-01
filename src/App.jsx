@@ -7,6 +7,7 @@ import Shop from "./routes/shop/shop.component";
 import Success from "./routes/success/Success";
 import Failure from "./routes/failure/Failure";
 import useUserStore from "./stores/userStore";
+import ProtectedRoute from "./components/protected-route/protected-route.component";
 
 const App = () => {
   useUserStore.getState().initializeListener();
@@ -17,9 +18,13 @@ const App = () => {
         <Route index element={<Home />} />
         <Route path='/shop/*' element={<Shop />} />
         <Route path='/auth' element={<Authentication />} />
-        <Route path='/checkout' element={<Checkout />} />
-        <Route path='/success' element={<Success />} />
-        <Route path='/failure' element={<Failure />} />
+        
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path='/checkout' element={<Checkout />} />
+          <Route path='/success' element={<Success />} />
+          <Route path='/failure' element={<Failure />} />
+        </Route>
       </Route>
     </Routes>
   );

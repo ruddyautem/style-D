@@ -15,7 +15,7 @@ const CheckoutProduct = ({ product }) => {
   return (
     <CheckoutProductContainer>
       <ImageContainer>
-        <img src={product.imageUrl} alt={`${product.name}`} />
+        <img src={`https://wsrv.nl/?url=${encodeURIComponent(product.imageUrl)}&w=300&output=webp`} alt={`${product.name}`} />
       </ImageContainer>
       <BaseSpan>{product.name}</BaseSpan>
       <Quantity>

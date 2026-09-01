@@ -5,7 +5,7 @@ export const BackgroundImage = styled.div`
   height: 100%;
   background-size: cover;
   background-position: center;
-  background-image: ${({ $imageUrl }) => `url(${$imageUrl})`};
+  background-image: ${({ $imageUrl }) => `url(https://wsrv.nl/?url=${encodeURIComponent($imageUrl)}&w=800&output=webp)`};
   transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
 `;
 

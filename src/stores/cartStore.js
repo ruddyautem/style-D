@@ -100,12 +100,12 @@ const withUserCheck = (fn) => async (...args) => {
 
     // Save order to Firestore and clear cart
     saveOrder: withUserCheck(async (sessionId, cartItems) => {
-      console.log("Clearing user cart..."); // Debugging
-      await clearUserCart(get().userId);
-    
       console.log("Saving order to Firestore..."); // Debugging
       const orderId = await saveOrderToFirestore(get().userId, sessionId, cartItems, "success");
       console.log("Order ID after saving to Firestore:", orderId); // Debugging
+
+      console.log("Clearing user cart..."); // Debugging
+      await clearUserCart(get().userId);
     
       return orderId; // Ensure this returns the orderId
     }),

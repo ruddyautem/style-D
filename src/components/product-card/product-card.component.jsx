@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
     // Reset button text after 2 seconds
     setTimeout(() => {
       setIsAdded(false);
-    }, 2000);
+    }, 400);
   };
 
   // Logic for dynamic button text
@@ -49,7 +49,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <ProductCardContainer>
-      <img src={imageUrl} alt={name} loading="lazy" />
+      <img src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=400&output=webp`} alt={name} loading="lazy" />
       <Footer>
         <Name>{name}</Name>
         <Price>{price}€</Price>

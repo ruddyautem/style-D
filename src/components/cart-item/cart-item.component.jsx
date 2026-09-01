@@ -4,7 +4,7 @@ const CartItem = ({ cartItem }) => {
 	const { name, imageUrl, price, quantity } = cartItem;
 	return (
 		<CartItemContainer>
-			<img src={imageUrl} alt={`${name}`} />
+			<img src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=200&output=webp`} alt={`${name}`} />
 			<ItemDetails>
 				<span className='name'>{name}</span>
 				<span className='quantity'>

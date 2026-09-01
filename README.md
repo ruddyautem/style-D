@@ -1,70 +1,185 @@
-# Getting Started with Create React App
+# Style-D
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<div align="center">
 
-## Available Scripts
+**[Français](#français)** · **[English](#english)**
 
-In the project directory, you can run:
+</div>
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Français
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 📋 Présentation
 
-### `npm test`
+Bienvenue sur le code source de **Style-D**. J'avais envie me créer une expérience e-commerce. Le but n'était pas juste de faire une jolie vitrine, mais une application complète et fonctionnelle : exploration du catalogue, gestion du panier, authentification sécurisée, jusqu'au paiement final via l'API Stripe.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 📑 Les pages
 
-### `npm run build`
+| Route                   | Ce qu'on y trouve                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `/` (Accueil)           | La vitrine principale, avec de grandes images optimisées à la volée, et un accès rapide aux catégories.                |
+| `/shop`                 | Le catalogue complet. On peut scroller à travers tous les articles ou filtrer par catégorie (chapeaux, baskets, etc.). |
+| `/auth`                 | La page de connexion/inscription, gérée par Firebase Auth (email ou compte Google).                                    |
+| `/checkout`             | Le récapitulatif du panier. J'ai protégé cette route : impossible d'y accéder sans être connecté.                      |
+| `/success` & `/failure` | Les pages de retour de Stripe, qui s'occupent de valider la commande et de vider le panier proprement.                 |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 🌍 L'état global avec Zustand
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Plutôt que de sortir l'artillerie lourde avec Redux ou de me battre avec des Contextes React complexes, j'ai choisi **Zustand**. C'est léger, c'est rapide, et ça m'a permis de séparer la logique très proprement :
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- `cartStore` : S'occupe d'ajouter/retirer des articles, de calculer le total et de synchroniser le panier en base de données.
+- `userStore` : Écoute les changements de Firebase pour savoir si l'utilisateur est connecté.
+- `categoriesStore` : Va chercher tout le catalogue sur Firestore et le met en cache.
 
-### `npm run eject`
+### 🔒 Sécurité et Flux de paiement
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Je tenais à ce que la logique de paiement soit robuste, même pour un projet de portfolio :
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Routes Protégées** : Le composant `ProtectedRoute` redirige proprement les curieux qui essaieraient d'aller sur `/checkout` sans être connectés.
+- **Fiabilité du Panier** : Le panier n'est vidé _qu'après_ le retour de Stripe et la confirmation de la commande. Si l'utilisateur abandonne son paiement en cours de route, il retrouve ses articles intacts.
+- **Images optimisées** : J'ai mis en place un proxy CDN (Weserv) pour redimensionner et convertir les grosses images en WebP à la volée. Le site charge instantanément.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 🛠 Stack technique
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Catégorie             | Technologies               |
+| --------------------- | -------------------------- |
+| Framework             | React 19 + Vite            |
+| Langage               | JavaScript / JSX           |
+| Package manager       | Bun                        |
+| Styling               | Styled Components + SCSS   |
+| Authentification & DB | Firebase (Auth, Firestore) |
+| Paiement              | Stripe API                 |
+| State Management      | Zustand                    |
 
-## Learn More
+### 📁 Structure du projet
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+style-d/
+├── public/                          # Ressources statiques
+├── src/
+│   ├── actions/
+│   │   └── createCheckoutSession.js # Connexion à l'API Stripe
+│   ├── assets/                      # Logos et SVG
+│   ├── components/                  # Tous les composants UI réutilisables
+│   │   └── protected-route/         # Logique de protection des pages
+│   ├── libs/
+│   │   └── firebase/                # Initialisation de Firebase
+│   ├── routes/                      # Les vues principales
+│   │   ├── authentication/
+│   │   ├── checkout/
+│   │   ├── home/
+│   │   ├── shop/
+│   │   └── success/
+│   ├── stores/                      # Mes 3 stores Zustand
+│   ├── utils/
+│   │   └── firestoreInteractions.js # Appels à la base de données
+│   ├── App.jsx                      # Le routeur
+│   └── index.jsx                    # Point de montage
+├── .env.local                       # Variables d'environnement
+├── package.json
+└── vite.config.js
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 🚀 Pour lancer le projet
 
-### Code Splitting
+```bash
+git clone <url-du-repo>
+cd style-d
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+bun install
+bun run dev
+```
 
-### Analyzing the Bundle Size
+Direction [http://localhost:5173](http://localhost:5173).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+> 💡 Pensez à créer un fichier `.env.local` à la racine avec vos clés Firebase et Stripe pour que le projet puisse se connecter aux services.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## English
 
-### Advanced Configuration
+### 📋 Overview
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Welcome to the source code of **Style-D**. I wanted to challenge myself by building an e-commerce experience. The goal wasn't just to make a pretty storefront, but a fully functional app: browsing the catalog, managing a cart, secure authentication, all the way down to the final checkout via the Stripe API.
 
-### Deployment
+### 📑 Pages
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+| Route                   | What's there                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `/` (Home)              | The main storefront, featuring large images optimized on the fly, and quick access to categories. |
+| `/shop`                 | The full catalog. You can scroll through all items or filter by category (hats, sneakers, etc.).  |
+| `/auth`                 | The login/registration page, handled by Firebase Auth (email or Google account).                  |
+| `/checkout`             | The cart summary. I protected this route: you can't access it unless you're logged in.            |
+| `/success` & `/failure` | The Stripe return pages, which take care of confirming the order and safely clearing the cart.    |
 
-### `npm run build` fails to minify
+### 🌍 Global State with Zustand
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Instead of bringing out the heavy artillery with Redux or wrestling with complex React Contexts, I went with **Zustand**. It's lightweight, fast, and allowed me to keep my logic very clean:
+
+- `cartStore`: Handles adding/removing items, calculating totals, and syncing the cart to the database.
+- `userStore`: Listens to Firebase to track the user's authentication state.
+- `categoriesStore`: Fetches the entire catalog from Firestore and caches it.
+
+### 🔒 Security and Payment Flow
+
+I wanted the payment logic to be solid, even for a portfolio project:
+
+- **Protected Routes**: The `ProtectedRoute` component smoothly redirects anyone trying to hit `/checkout` without being logged in.
+- **Cart Reliability**: The cart is _only_ cleared after returning from Stripe with a confirmed order. If a user bails on the payment page, their cart items are waiting right where they left them.
+- **Image Optimization**: I set up a CDN proxy (Weserv) to resize and convert heavy images to WebP on the fly. The site loads instantly.
+
+### 🛠 Tech stack
+
+| Category         | Technologies               |
+| ---------------- | -------------------------- |
+| Framework        | React 19 + Vite            |
+| Language         | JavaScript / JSX           |
+| Package manager  | Bun                        |
+| Styling          | Styled Components + SCSS   |
+| Auth & Database  | Firebase (Auth, Firestore) |
+| Payment          | Stripe API                 |
+| State Management | Zustand                    |
+
+### 📁 Project structure
+
+```
+style-d/
+├── public/                          # Static assets
+├── src/
+│   ├── actions/
+│   │   └── createCheckoutSession.js # Stripe API connection
+│   ├── assets/                      # Logos and SVGs
+│   ├── components/                  # All reusable UI components
+│   │   └── protected-route/         # Page protection logic
+│   ├── libs/
+│   │   └── firebase/                # Firebase initialization
+│   ├── routes/                      # Main views
+│   │   ├── authentication/
+│   │   ├── checkout/
+│   │   ├── home/
+│   │   ├── shop/
+│   │   └── success/
+│   ├── stores/                      # My 3 Zustand stores
+│   ├── utils/
+│   │   └── firestoreInteractions.js # Database calls
+│   ├── App.jsx                      # Router
+│   └── index.jsx                    # Mount point
+├── .env.local                       # Environment variables
+├── package.json
+└── vite.config.js
+```
+
+### 🚀 Running it locally
+
+```bash
+git clone <repo-url>
+cd style-d
+
+bun install
+bun run dev
+```
+
+Then head to [http://localhost:5173](http://localhost:5173).
+
+> 💡 Don't forget to create a `.env.local` file at the root with your Firebase and Stripe keys so the project can connect to those services.

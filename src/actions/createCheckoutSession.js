@@ -1,5 +1,4 @@
 import Stripe from "stripe";
-import useCartStore from "../stores/cartStore"; // Assuming this is where you manage user state
 import useUserStore from "../stores/userStore";
 
 const stripe = new Stripe(import.meta.env.VITE_STRIPE_SECRET_KEY, {
@@ -8,8 +7,8 @@ const stripe = new Stripe(import.meta.env.VITE_STRIPE_SECRET_KEY, {
 
 export const createCheckoutSession = async (cartItems) => {
   try {
-    const { currentUser } = useUserStore.getState(); // Get the current user from UserStore
-    const displayName = currentUser?.displayName || ""; // Get displayName from current user
+    const { currentUser } = useUserStore.getState();
+    const displayName = currentUser?.displayName || "";
 
     if (!currentUser) {
       throw new Error("User is not authenticated");
@@ -17,8 +16,8 @@ export const createCheckoutSession = async (cartItems) => {
 
     // Step 1: Create Customer with displayName and email
     const customer = await stripe.customers.create({
-      name: displayName, // Use displayName as full name
-      email: currentUser.email, // User email from Firebase
+      name: displayName,
+      email: currentUser.email,
     });
 
     // Step 2: Create Checkout Session tied to the created customer
@@ -42,15 +41,12 @@ export const createCheckoutSession = async (cartItems) => {
       locale: "fr",
     });
 
-    // Save the order using the cart store function
-    useCartStore.getState().saveOrder(session.id, cartItems);
+    // We do NOT save the order or clear the cart here anymore.
+    // That logic is now safely handled on the Success page.
 
     return session;
   } catch (error) {
-    console.error(
-      "Erreur lors de la création de la session de paiement :",
-      error
-    );
+    console.error("Erreur lors de la création de la session de paiement :", error);
     throw error;
   }
 };
