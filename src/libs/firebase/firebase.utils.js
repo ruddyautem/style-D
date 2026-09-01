@@ -24,14 +24,16 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 
 // Auth
-export const auth = getAuth(firebaseApp);
+const auth = getAuth(firebaseApp);
+auth.useDeviceLanguage();
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
 
 // Firestore
 export const db = getFirestore(firebaseApp);
-
-// Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
 
 // Inside firebase.utils.js, replace the DEV block with this:
 if (import.meta.env.DEV) {
@@ -51,7 +53,7 @@ if (import.meta.env.DEV) {
 export const signInWithGooglePopup = () =>
   signInWithPopup(auth, googleProvider);
 
-export const signInWithGoogleRedirect = () =>
+const signInWithGoogleRedirect = () =>
   signInWithRedirect(auth, googleProvider);
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {

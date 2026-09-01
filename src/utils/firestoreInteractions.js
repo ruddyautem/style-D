@@ -84,10 +84,10 @@ export const createUserDocumentFromAuth = async (
 };
 
 // Cart functions (kept mostly the same but with better logging)
-export const getCartCollectionRef = (userId) =>
+const getCartCollectionRef = (userId) =>
   collection(db, "users", userId, "cart");
 
-export const getCartDocRef = (userId, productId) =>
+const getCartDocRef = (userId, productId) =>
   doc(db, "users", userId, "cart", productId.toString());
 
 export const fetchUserCart = async (userId) => {
