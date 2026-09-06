@@ -185,8 +185,15 @@ const Navigation = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   const { isCartOpen, setIsCartOpen, cartCount } = useCartStore();
   const [activeDrawer, setActiveDrawer] = useState(null); // 'menu' | 'account' | 'cart' | null
+  const [lastActiveRightDrawer, setLastActiveRightDrawer] = useState("account");
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (activeDrawer === "account" || activeDrawer === "cart") {
+      setLastActiveRightDrawer(activeDrawer);
+    }
+  }, [activeDrawer]);
 
   const handleDrawerToggle = (drawerType) => {
     setActiveDrawer((prev) => (prev === drawerType ? null : drawerType));
@@ -194,6 +201,130 @@ const Navigation = () => {
 
   const closeDrawer = () => {
     setActiveDrawer(null);
+  };
+
+  // Touch swipe gesture handling for bottom bar buttons & drawers
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const isSwipingRef = useRef(false);
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+    };
+    isSwipingRef.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+      isSwipingRef.current = true;
+    }
+  };
+
+  // Left button gesture (Categories: slide right to open, slide left to close)
+  const handleLeftButtonTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
+
+    if (isHorizontal && Math.abs(diffX) >= 25) {
+      if (diffX > 0) {
+        setActiveDrawer("menu");
+      } else if (diffX < 0 && activeDrawer === "menu") {
+        closeDrawer();
+      }
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 150);
+    } else {
+      isSwipingRef.current = false;
+    }
+  };
+
+  // Right button gesture (Cart: slide to open, slide right to close when open)
+  const handleCartButtonTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
+
+    if (isHorizontal && Math.abs(diffX) >= 25) {
+      if (activeDrawer === "cart") {
+        if (diffX > 0) {
+          closeDrawer();
+        }
+      } else {
+        setActiveDrawer("cart");
+      }
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 150);
+    } else {
+      isSwipingRef.current = false;
+    }
+  };
+
+  // Account button gesture
+  const handleAccountButtonTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
+
+    if (isHorizontal && Math.abs(diffX) >= 25) {
+      if (activeDrawer === "account") {
+        if (diffX > 0) {
+          closeDrawer();
+        }
+      } else {
+        setActiveDrawer("account");
+      }
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 150);
+    } else {
+      isSwipingRef.current = false;
+    }
+  };
+
+  // Drawer touch gestures (swipe left drawer to the left to close, swipe right drawer to the right to close)
+  const handleLeftDrawerTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    if (Math.abs(diffX) > Math.abs(diffY) && diffX < -35) {
+      closeDrawer();
+    }
+  };
+
+  const handleRightDrawerTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartRef.current.x;
+    const diffY = touch.clientY - touchStartRef.current.y;
+    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 35) {
+      closeDrawer();
+    }
+  };
+
+  const handleCategoryClick = () => {
+    if (isSwipingRef.current) return;
+    handleDrawerToggle("menu");
+  };
+
+  const handleAccountClick = () => {
+    if (isSwipingRef.current) return;
+    handleDrawerToggle("account");
+  };
+
+  const handleCartClick = () => {
+    if (isSwipingRef.current) return;
+    handleDrawerToggle("cart");
   };
 
   const handleSignOut = async () => {
@@ -239,6 +370,85 @@ const Navigation = () => {
     }
     return () => {
       document.body.style.overflow = "";
+    };
+  }, [activeDrawer]);
+
+  // Global tactile swipe anywhere on the screen for mobile (<= 768px)
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let isHorizontalGesture = false;
+
+    const onTouchStart = (e) => {
+      if (window.innerWidth > 768) return;
+      if (!e.touches || e.touches.length !== 1) return;
+
+      const target = e.target;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.closest?.("input, textarea, select, [data-no-swipe]"))
+      ) {
+        return;
+      }
+
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      isHorizontalGesture = false;
+    };
+
+    const onTouchMove = (e) => {
+      if (window.innerWidth > 768) return;
+      if (!e.touches || e.touches.length !== 1) return;
+
+      const diffX = e.touches[0].clientX - startX;
+      const diffY = e.touches[0].clientY - startY;
+
+      if (Math.abs(diffX) > 15 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+        isHorizontalGesture = true;
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      if (window.innerWidth > 768) return;
+      if (!isHorizontalGesture || !e.changedTouches || e.changedTouches.length !== 1) {
+        return;
+      }
+
+      const diffX = e.changedTouches[0].clientX - startX;
+      const diffY = e.changedTouches[0].clientY - startY;
+
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0) {
+          // Slide vers la DROITE: ouvre les catégories (gauche) ou ferme le tiroir droit
+          if (activeDrawer === "cart" || activeDrawer === "account") {
+            closeDrawer();
+          } else if (activeDrawer !== "menu") {
+            setActiveDrawer("menu");
+          }
+        } else {
+          // Slide vers la GAUCHE: ouvre le panier (droite) ou ferme les catégories
+          if (activeDrawer === "menu") {
+            closeDrawer();
+          } else if (activeDrawer !== "cart") {
+            setActiveDrawer("cart");
+          }
+        }
+      }
+
+      isHorizontalGesture = false;
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
   }, [activeDrawer]);
 
@@ -392,181 +602,198 @@ const Navigation = () => {
         </NavSection>
       </NavigationContainer>
 
-      {/* Slide-over Unified Drawer: container stays open when switching views, avoiding repeated animations */}
+      {/* Slide-over Backdrop */}
       <UnifiedDrawerBackdrop $isOpen={activeDrawer !== null} onClick={closeDrawer} />
-      <UnifiedDrawerContainer
-        $isOpen={activeDrawer !== null}
-        onClick={(e) => e.stopPropagation()}
-      >
-          {activeDrawer === "menu" && (
-            <DrawerContentWrapper key="menu">
-              <SideMenuHeader>
-                <h3>CATÉGORIES</h3>
-                <button onClick={closeDrawer}>[ FERMER ]</button>
-              </SideMenuHeader>
 
-              <SideMenuBody>
-                <div className="menu-section-label">RAYONS & SÉRIES</div>
-                <SideMenuCategoryItem to='/shop' onClick={closeDrawer}>
-                  <span className="item-title">TOUTE LA BOUTIQUE</span>
-                  <span className="arrow-indicator">→</span>
-                </SideMenuCategoryItem>
-                {CATEGORIES_LIST.map((cat) => (
-                  <SideMenuCategoryItem
-                    key={cat.id}
-                    to={`/shop/${cat.id}`}
+      {/* Left Drawer Container: Categories Menu (Slides from the left on mobile) */}
+      <UnifiedDrawerContainer
+        $side="left"
+        $isOpen={activeDrawer === "menu"}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleLeftDrawerTouchEnd}
+      >
+        <DrawerContentWrapper key="menu">
+          <SideMenuHeader>
+            <h3>CATÉGORIES</h3>
+            <button onClick={closeDrawer}>[ FERMER ]</button>
+          </SideMenuHeader>
+
+          <SideMenuBody>
+            <div className="menu-section-label">RAYONS & SÉRIES</div>
+            <SideMenuCategoryItem to='/shop' onClick={closeDrawer}>
+              <span className="item-title">TOUTE LA BOUTIQUE</span>
+              <span className="arrow-indicator">→</span>
+            </SideMenuCategoryItem>
+            {CATEGORIES_LIST.map((cat) => (
+              <SideMenuCategoryItem
+                key={cat.id}
+                to={`/shop/${cat.id}`}
+                onClick={closeDrawer}
+              >
+                <span className="item-title">{cat.label}</span>
+                <span className="item-tag">{cat.tag}</span>
+              </SideMenuCategoryItem>
+            ))}
+          </SideMenuBody>
+
+          <SideMenuFooter>
+            {currentUser ? (
+              <SideMenuLink to='/orders' onClick={closeDrawer}>
+                <PackageIcon size={14} />
+                <span>MES COMMANDES</span>
+              </SideMenuLink>
+            ) : (
+              <SideMenuLink to='/auth' onClick={closeDrawer}>
+                <UserIcon size={14} />
+                <span>CONNEXION / CRÉER UN COMPTE</span>
+              </SideMenuLink>
+            )}
+            <SideMenuLink
+              to="/checkout"
+              className="primary"
+              onClick={closeDrawer}
+            >
+              <ShoppingBag style={{ width: 14, height: 14 }} />
+              <span>OUVRIR LE PANIER ({cartCount})</span>
+            </SideMenuLink>
+          </SideMenuFooter>
+        </DrawerContentWrapper>
+      </UnifiedDrawerContainer>
+
+      {/* Right Drawer Container: Account & Cart (Slides from the right) */}
+      <UnifiedDrawerContainer
+        $side="right"
+        $isOpen={activeDrawer === "account" || activeDrawer === "cart"}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleRightDrawerTouchEnd}
+      >
+        {(activeDrawer === "account" || (activeDrawer === null && lastActiveRightDrawer === "account")) && (
+          <DrawerContentWrapper key="account">
+            <AccountDrawerHeader>
+              <h3>MON COMPTE</h3>
+              <button onClick={closeDrawer}>[ FERMER ]</button>
+            </AccountDrawerHeader>
+
+            <AccountDrawerBody>
+              {currentUser ? (
+                <>
+                  <AccountUserCard>
+                    <div className="user-icon-box">
+                      <UserIcon size={22} />
+                    </div>
+                    <div className="user-info">
+                      <div className="status-badge">
+                        <span className="dot" />
+                        <span>CONNECTÉ</span>
+                      </div>
+                      <span className="user-name">
+                        {currentUser.displayName || currentUser.email?.split("@")[0] || "Client"}
+                      </span>
+                      <span className="user-email">{currentUser.email}</span>
+                    </div>
+                  </AccountUserCard>
+
+                  <DrawerSectionLabel>NAVIGATION</DrawerSectionLabel>
+
+                  <AccountDrawerItem to="/orders" onClick={closeDrawer}>
+                    <div className="item-content">
+                      <PackageIcon size={15} />
+                      <span>MES COMMANDES</span>
+                    </div>
+                    <span className="item-arrow">→</span>
+                  </AccountDrawerItem>
+
+                  <AccountDrawerItem
+                    to="/checkout"
                     onClick={closeDrawer}
                   >
-                    <span className="item-title">{cat.label}</span>
-                    <span className="item-tag">{cat.tag}</span>
-                  </SideMenuCategoryItem>
-                ))}
-              </SideMenuBody>
+                    <div className="item-content">
+                      <ShoppingBag style={{ width: 15, height: 15 }} />
+                      <span>VOIR LE PANIER</span>
+                    </div>
+                    <span className="cart-count-pill">{cartCount}</span>
+                  </AccountDrawerItem>
 
-              <SideMenuFooter>
-                {currentUser ? (
-                  <SideMenuLink to='/orders' onClick={closeDrawer}>
-                    <PackageIcon size={14} />
-                    <span>MES COMMANDES</span>
-                  </SideMenuLink>
-                ) : (
-                  <SideMenuLink to='/auth' onClick={closeDrawer}>
-                    <UserIcon size={14} />
-                    <span>CONNEXION / CRÉER UN COMPTE</span>
-                  </SideMenuLink>
-                )}
-                <SideMenuLink
-                  to="/checkout"
-                  className="primary"
-                  onClick={closeDrawer}
-                >
-                  <ShoppingBag style={{ width: 14, height: 14 }} />
-                  <span>OUVRIR LE PANIER ({cartCount})</span>
-                </SideMenuLink>
-              </SideMenuFooter>
-            </DrawerContentWrapper>
-          )}
+                  <AccountDrawerItem to="/shop" onClick={closeDrawer}>
+                    <div className="item-content">
+                      <span className="bullet">■</span>
+                      <span>TOUTE LA BOUTIQUE</span>
+                    </div>
+                    <span className="item-arrow">→</span>
+                  </AccountDrawerItem>
+                </>
+              ) : (
+                <>
+                  <AccountGuestCard>
+                    <div className="guest-icon-box">
+                      <UserIcon size={26} />
+                    </div>
+                    <h4>ESPACE CLIENT</h4>
+                    <p>
+                      Connectez-vous pour suivre vos commandes, vos favoris et accéder rapidement à votre compte.
+                    </p>
+                  </AccountGuestCard>
 
-          {activeDrawer === "account" && (
-            <DrawerContentWrapper key="account">
-              <AccountDrawerHeader>
-                <h3>MON COMPTE</h3>
-                <button onClick={closeDrawer}>[ FERMER ]</button>
-              </AccountDrawerHeader>
+                  <AccountPrimaryButton to="/auth" onClick={closeDrawer}>
+                    <span>CONNEXION / S'INSCRIRE</span>
+                    <span>→</span>
+                  </AccountPrimaryButton>
 
-              <AccountDrawerBody>
-                {currentUser ? (
-                  <>
-                    <AccountUserCard>
-                      <div className="user-icon-box">
-                        <UserIcon size={22} />
-                      </div>
-                      <div className="user-info">
-                        <div className="status-badge">
-                          <span className="dot" />
-                          <span>CONNECTÉ</span>
-                        </div>
-                        <span className="user-name">
-                          {currentUser.displayName || currentUser.email?.split("@")[0] || "Client"}
-                        </span>
-                        <span className="user-email">{currentUser.email}</span>
-                      </div>
-                    </AccountUserCard>
+                  <DrawerSectionLabel style={{ marginTop: 8 }}>ACCÈS RAPIDE</DrawerSectionLabel>
 
-                    <DrawerSectionLabel>NAVIGATION</DrawerSectionLabel>
+                  <AccountDrawerItem to="/orders" onClick={closeDrawer}>
+                    <div className="item-content">
+                      <PackageIcon size={15} />
+                      <span>SUIVRE UNE COMMANDE</span>
+                    </div>
+                    <span className="item-arrow">→</span>
+                  </AccountDrawerItem>
 
-                    <AccountDrawerItem to="/orders" onClick={closeDrawer}>
-                      <div className="item-content">
-                        <PackageIcon size={15} />
-                        <span>MES COMMANDES</span>
-                      </div>
-                      <span className="item-arrow">→</span>
-                    </AccountDrawerItem>
-
-                    <AccountDrawerItem
-                      to="/checkout"
-                      onClick={closeDrawer}
-                    >
-                      <div className="item-content">
-                        <ShoppingBag style={{ width: 15, height: 15 }} />
-                        <span>VOIR LE PANIER</span>
-                      </div>
-                      <span className="cart-count-pill">{cartCount}</span>
-                    </AccountDrawerItem>
-
-                    <AccountDrawerItem to="/shop" onClick={closeDrawer}>
-                      <div className="item-content">
-                        <span className="bullet">■</span>
-                        <span>TOUTE LA BOUTIQUE</span>
-                      </div>
-                      <span className="item-arrow">→</span>
-                    </AccountDrawerItem>
-                  </>
-                ) : (
-                  <>
-                    <AccountGuestCard>
-                      <div className="guest-icon-box">
-                        <UserIcon size={26} />
-                      </div>
-                      <h4>ESPACE CLIENT</h4>
-                      <p>
-                        Connectez-vous pour suivre vos commandes, vos favoris et accéder rapidement à votre compte.
-                      </p>
-                    </AccountGuestCard>
-
-                    <AccountPrimaryButton to="/auth" onClick={closeDrawer}>
-                      <span>CONNEXION / S'INSCRIRE</span>
-                      <span>→</span>
-                    </AccountPrimaryButton>
-
-                    <DrawerSectionLabel style={{ marginTop: 8 }}>ACCÈS RAPIDE</DrawerSectionLabel>
-
-                    <AccountDrawerItem to="/orders" onClick={closeDrawer}>
-                      <div className="item-content">
-                        <PackageIcon size={15} />
-                        <span>SUIVRE UNE COMMANDE</span>
-                      </div>
-                      <span className="item-arrow">→</span>
-                    </AccountDrawerItem>
-
-                    <AccountDrawerItem
-                      to="/checkout"
-                      onClick={closeDrawer}
-                    >
-                      <div className="item-content">
-                        <ShoppingBag style={{ width: 15, height: 15 }} />
-                        <span>VOIR LE PANIER</span>
-                      </div>
-                      <span className="cart-count-pill">{cartCount}</span>
-                    </AccountDrawerItem>
-                  </>
-                )}
-              </AccountDrawerBody>
-
-              {currentUser && (
-                <AccountDrawerFooter>
-                  <AccountLogoutButton onClick={handleSignOut}>
-                    <LogoutIcon size={15} />
-                    <span>SE DÉCONNECTER</span>
-                  </AccountLogoutButton>
-                </AccountDrawerFooter>
+                  <AccountDrawerItem
+                    to="/checkout"
+                    onClick={closeDrawer}
+                  >
+                    <div className="item-content">
+                      <ShoppingBag style={{ width: 15, height: 15 }} />
+                      <span>VOIR LE PANIER</span>
+                    </div>
+                    <span className="cart-count-pill">{cartCount}</span>
+                  </AccountDrawerItem>
+                </>
               )}
-            </DrawerContentWrapper>
-          )}
+            </AccountDrawerBody>
 
-          {activeDrawer === "cart" && (
-            <DrawerContentWrapper key="cart">
-              <CartDrawerView onClose={closeDrawer} />
-            </DrawerContentWrapper>
-          )}
-        </UnifiedDrawerContainer>
+            {currentUser && (
+              <AccountDrawerFooter>
+                <AccountLogoutButton onClick={handleSignOut}>
+                  <LogoutIcon size={15} />
+                  <span>SE DÉCONNECTER</span>
+                </AccountLogoutButton>
+              </AccountDrawerFooter>
+            )}
+          </DrawerContentWrapper>
+        )}
+
+        {(activeDrawer === "cart" || (activeDrawer === null && lastActiveRightDrawer === "cart")) && (
+          <DrawerContentWrapper key="cart">
+            <CartDrawerView onClose={closeDrawer} />
+          </DrawerContentWrapper>
+        )}
+      </UnifiedDrawerContainer>
 
       {/* Barre de navigation mobile en bas */}
       <MobileBottomBar>
         <MobileBottomLeft>
           {/* Bouton Hamburger Catégories */}
           <MobileBottomCategoryButton
-            onClick={() => handleDrawerToggle("menu")}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleLeftButtonTouchEnd}
+            onClick={handleCategoryClick}
             $isActive={activeDrawer === "menu"}
             title="Catégories"
             aria-label="Catégories"
@@ -578,7 +805,10 @@ const Navigation = () => {
         <MobileBottomRight>
           {/* Juste à côté le compte (juste l'icône, sans écriture ni point lumineux) */}
           <MobileBottomButton
-            onClick={() => handleDrawerToggle("account")}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleAccountButtonTouchEnd}
+            onClick={handleAccountClick}
             $isActive={activeDrawer === "account"}
             title="Mon compte"
             aria-label="Mon compte"
@@ -588,7 +818,10 @@ const Navigation = () => {
 
           {/* En bas à droite le panier avec icône et nombre au milieu */}
           <MobileBottomCartIconButton
-            onClick={() => handleDrawerToggle("cart")}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleCartButtonTouchEnd}
+            onClick={handleCartClick}
             $isActive={activeDrawer === "cart"}
             title="Panier"
             aria-label="Panier"

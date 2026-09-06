@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Link } from "react-router-dom";
 
 export const LayoutContainer = styled.div`
@@ -639,6 +639,8 @@ export const UnifiedDrawerContainer = styled.aside`
   display: flex;
   flex-direction: column;
   z-index: 1000;
+  touch-action: pan-y;
+  pointer-events: ${({ $isOpen }) => ($isOpen ? "auto" : "none")};
   transform: ${({ $isOpen }) => ($isOpen ? "translateX(0)" : "translateX(100%)")};
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -647,6 +649,17 @@ export const UnifiedDrawerContainer = styled.aside`
     height: calc(100vh - 56px);
     height: calc(100dvh - 56px);
     max-width: 92vw;
+
+    ${({ $side }) =>
+      $side === "left" &&
+      css`
+        left: 0;
+        right: auto;
+        border-left: none;
+        border-right: 1px solid var(--border-dark);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+        transform: ${({ $isOpen }) => ($isOpen ? "translateX(0)" : "translateX(-100%)")};
+      `}
   }
 `;
 
@@ -995,6 +1008,7 @@ export const MobileBottomBar = styled.div`
     z-index: 1001;
     box-sizing: border-box;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    touch-action: pan-y;
   }
 `;
 
@@ -1101,6 +1115,7 @@ export const MobileBottomCategoryButton = styled.button`
   transition: all 0.2s ease;
   user-select: none;
   box-sizing: border-box;
+  touch-action: pan-y;
 
   .hamburger-icon {
     width: 20px;
@@ -1137,6 +1152,7 @@ export const MobileBottomAccountIconButton = styled.button`
   transition: all 0.2s ease;
   user-select: none;
   box-sizing: border-box;
+  touch-action: pan-y;
 
   .user-icon {
     width: 20px;
@@ -1175,6 +1191,7 @@ export const MobileBottomCartIconButton = styled.button`
   transition: all 0.2s ease;
   user-select: none;
   box-sizing: border-box;
+  touch-action: pan-y;
 
   .cart-svg-icon {
     width: 22px;

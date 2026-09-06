@@ -29,6 +29,7 @@ export const Input = styled.input`
 	padding: 10px 10px 10px 5px;
 	display: block;
 	width: 100%;
+	box-sizing: border-box;
 	border: none;
 	border-radius: 0;
 	border-bottom: 1px solid ${subColor};
@@ -46,6 +47,8 @@ export const Input = styled.input`
 export const Group = styled.div`
 	position: relative;
 	margin: 45px 0;
+	width: 100%;
+	box-sizing: border-box;
 
 	input[type='password'] {
 		letter-spacing: 0.3em;

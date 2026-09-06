@@ -2,7 +2,9 @@ import styled from "styled-components";
 
 export const BaseButton = styled.button`
   min-width: 150px;
+  max-width: 100%;
   width: auto;
+  box-sizing: border-box;
   height: 48px;
   letter-spacing: 1.8px;
   padding: 0 28px;
@@ -34,15 +36,15 @@ export const BaseButton = styled.button`
 `;
 
 export const GoogleSignInButton = styled(BaseButton)`
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background-color: #4285f4;
+  color: #ffffff;
+  border: 1px solid #4285f4;
 
   &:hover {
-    background-color: #ede8df;
-    color: var(--text-primary);
-    border-color: #d6cfc2;
-    box-shadow: 0 4px 14px rgba(44, 38, 35, 0.06);
+    background-color: #3367d6;
+    border-color: #3367d6;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(66, 133, 244, 0.3);
   }
 `;
 

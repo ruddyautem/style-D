@@ -36,9 +36,10 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 ### ✨ Fonctionnalités clés
 
 - **Gestion du panier** : Sélection multiple d'articles avec cases à cocher, barre d'actions groupées et modale de confirmation pour supprimer.
+- **Navigation mobile & Gestes tactiles** : Menu catégories coulissant depuis la gauche, panier depuis la droite, et gestes de glissement tactiles (slide droite pour ouvrir les catégories, slide gauche pour le panier).
 - **Notifications (Toasts)** : Notifications interactives avec barre de temps animée, pause au survol et fermeture au clic.
 - **Carte de test Stripe** : Aperçu visuel d'une carte avec les numéros de test pour faciliter les essais de paiement, lisible sur tous les écrans.
-- **Adaptation mobile** : Interface soignée et bien centrée, y compris sur les petits écrans mobiles (< 380px).
+- **Adaptation mobile** : Interface soignée et bien centrée, y compris sur les petits écrans mobiles (< 380px) et formulaires sans débordement.
 - **Routes protégées** : Redirection automatique si l'utilisateur n'est pas connecté pour accéder au paiement ou aux commandes.
 - **Images optimisées** : Redimensionnement et conversion automatique en WebP pour un chargement rapide.
 
@@ -133,9 +134,10 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 ### ✨ Key Features
 
 - **Cart Management**: Multi-item selection with checkboxes, bulk action toolbar, and delete confirmation modal.
+- **Mobile Navigation & Swipe Gestures**: Left-sliding categories menu, right-sliding cart, and touch swipe gestures (swipe right for categories, swipe left for cart).
 - **Toast Notifications**: Interactive toasts with animated progress timer, hover pause, and click to dismiss.
 - **Stripe Test Card**: Visual card preview displaying test credentials for easy checkout testing across all screen sizes.
-- **Mobile Responsive**: Clean and centered layout tuned for mobile devices, including smaller viewports (< 380px).
+- **Mobile Responsive**: Clean and centered layout tuned for mobile devices, including smaller viewports (< 380px) and overflow-free forms.
 - **Protected Routes**: Automatic redirect for unauthenticated users trying to access checkout or orders.
 - **Optimized Images**: Automatic WebP resizing and caching proxy for fast loading.
 
