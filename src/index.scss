@@ -1,23 +1,129 @@
-body {
-	margin: 0;
-	padding: 20px 40px;
-	font-family: 'Open Sans Condensed', sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-  }
-  
-  code {
-	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-	  monospace;
-  }
-  
-  a {
-	text-decoration: none;
-	color: black;
-  }
-  
-  * {
-	box-sizing: border-box;
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
+:root {
+  --bg-primary: #f6f5f0;
+  --bg-surface: #edece5;
+  --text-primary: #161616;
+  --text-secondary: #6e6d67;
+  --border-color: #ded9cd;
+  --border-dark: #161616;
+  --font-serif: 'Cinzel', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+code {
+  font-family: 'Space Grotesk', monospace;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Streetwear retro scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #161616;
+}
+
+/* ==========================================================================
+   Sonner Toast Progress Bar & Click dismiss styling
+   ========================================================================== */
+[data-sonner-toast] {
+  cursor: pointer !important;
+  overflow: hidden !important;
+
+  /* Timer bar only on front toast */
+  &[data-front="true"]::before,
+  &[data-expanded="true"]::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    top: auto;
+    right: auto;
+    height: 3px;
+    width: 100%;
+    background: #161616;
+    transform-origin: left;
+    animation: toast-timer 2.5s linear forwards;
+    z-index: 10;
+    pointer-events: none;
   }
-  
+
+  &:hover::before {
+    animation-play-state: paused;
+  }
+
+  &[data-type="success"] {
+    &::before {
+      background: #10b981 !important;
+    }
+
+    [data-icon],
+    [data-icon] svg {
+      color: #10b981 !important;
+      fill: #10b981 !important;
+    }
+  }
+
+  &[data-type="error"] {
+    &::before {
+      background: #e50914 !important;
+    }
+
+    [data-icon],
+    [data-icon] svg {
+      color: #e50914 !important;
+      fill: #e50914 !important;
+    }
+  }
+
+  &[data-type="info"] {
+    &::before {
+      background: #3b82f6 !important;
+    }
+
+    [data-icon],
+    [data-icon] svg {
+      color: #3b82f6 !important;
+      fill: #3b82f6 !important;
+    }
+  }
+
+  [data-close-button] {
+    display: none !important;
+  }
+}
+
+@keyframes toast-timer {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

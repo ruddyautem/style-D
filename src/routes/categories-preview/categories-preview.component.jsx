@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import CategoryPreview from "../../components/category-preview/category-preview.component";
 import useCategoriesStore from "../../stores/categoriesStore";
 import { IsLoading } from "../../components/category-preview/category-preview.styles";
+import { ShopPageWrapper } from "../category/category.styles";
 
 const CategoriesPreview = () => {
   const { categoriesMap, isLoading, fetchCategories } = useCategoriesStore();
@@ -14,7 +15,7 @@ const CategoriesPreview = () => {
   }, [fetchCategories, categoriesMap]);
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <ShopPageWrapper>
       {isLoading ? (
         <IsLoading>Chargement de la collection...</IsLoading>
       ) : (
@@ -29,7 +30,7 @@ const CategoriesPreview = () => {
           );
         })
       )}
-    </div>
+    </ShopPageWrapper>
   );
 };
 

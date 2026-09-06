@@ -12,45 +12,48 @@
 
 ### 📋 Présentation
 
-Bienvenue sur le code source de **Style-D**. J'avais envie me créer une expérience e-commerce. Le but n'était pas juste de faire une jolie vitrine, mais une application complète et fonctionnelle : exploration du catalogue, gestion du panier, authentification sécurisée, jusqu'au paiement final via l'API Stripe.
+Bienvenue sur le code source de **Style-D**, une boutique e-commerce streetwear développée avec React et Vite. L'objectif était de concevoir une application complète et fluide : exploration du catalogue, gestion du panier avec sélection multiple, authentification Firebase, historique des commandes et paiement sécurisé via Stripe.
 
 ### 📑 Les pages
 
 | Route                   | Ce qu'on y trouve                                                                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `/` (Accueil)           | La vitrine principale, avec de grandes images optimisées à la volée, et un accès rapide aux catégories.                |
-| `/shop`                 | Le catalogue complet. On peut scroller à travers tous les articles ou filtrer par catégorie (chapeaux, baskets, etc.). |
-| `/auth`                 | La page de connexion/inscription, gérée par Firebase Auth (email ou compte Google).                                    |
-| `/checkout`             | Le récapitulatif du panier. J'ai protégé cette route : impossible d'y accéder sans être connecté.                      |
-| `/success` & `/failure` | Les pages de retour de Stripe, qui s'occupent de valider la commande et de vider le panier proprement.                 |
+| `/` (Accueil)           | La vitrine principale avec bannières défilantes, accès direct aux catégories et images optimisées.                     |
+| `/shop`                 | Le catalogue complet, avec navigation par catégorie (chapeaux, vestes, baskets, etc.).                                |
+| `/auth`                 | Page de connexion et inscription (email/mot de passe ou compte Google via Firebase Auth).                             |
+| `/checkout`             | Récapitulatif du panier, sélection multiple, modale de confirmation, carte de test Stripe et affichage adapté mobile.  |
+| `/orders`               | Historique des commandes passées avec le statut et le détail des articles.                                             |
+| `/success` & `/failure` | Pages de retour après paiement Stripe (confirmation et validation du panier).                                          |
 
 ### 🌍 L'état global avec Zustand
 
-Plutôt que de sortir l'artillerie lourde avec Redux ou de me battre avec des Contextes React complexes, j'ai choisi **Zustand**. C'est léger, c'est rapide, et ça m'a permis de séparer la logique très proprement :
+Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand** pour sa simplicité et sa légèreté :
 
-- `cartStore` : S'occupe d'ajouter/retirer des articles, de calculer le total et de synchroniser le panier en base de données.
-- `userStore` : Écoute les changements de Firebase pour savoir si l'utilisateur est connecté.
-- `categoriesStore` : Va chercher tout le catalogue sur Firestore et le met en cache.
+- `cartStore` : Ajout/retrait d'articles, sélection multiple, calcul du total, modale de confirmation et synchronisation.
+- `userStore` : Gestion de l'utilisateur connecté via Firebase Auth.
+- `categoriesStore` : Récupération et mise en cache du catalogue Firestore.
 
-### 🔒 Sécurité et Flux de paiement
+### ✨ Fonctionnalités clés
 
-Je tenais à ce que la logique de paiement soit robuste, même pour un projet de portfolio :
-
-- **Routes Protégées** : Le composant `ProtectedRoute` redirige proprement les curieux qui essaieraient d'aller sur `/checkout` sans être connectés.
-- **Fiabilité du Panier** : Le panier n'est vidé _qu'après_ le retour de Stripe et la confirmation de la commande. Si l'utilisateur abandonne son paiement en cours de route, il retrouve ses articles intacts.
-- **Images optimisées** : J'ai mis en place un proxy CDN (Weserv) pour redimensionner et convertir les grosses images en WebP à la volée. Le site charge instantanément.
+- **Gestion du panier** : Sélection multiple d'articles avec cases à cocher, barre d'actions groupées et modale de confirmation pour supprimer.
+- **Notifications (Toasts)** : Notifications interactives avec barre de temps animée, pause au survol et fermeture au clic.
+- **Carte de test Stripe** : Aperçu visuel d'une carte avec les numéros de test pour faciliter les essais de paiement, lisible sur tous les écrans.
+- **Adaptation mobile** : Interface soignée et bien centrée, y compris sur les petits écrans mobiles (< 380px).
+- **Routes protégées** : Redirection automatique si l'utilisateur n'est pas connecté pour accéder au paiement ou aux commandes.
+- **Images optimisées** : Redimensionnement et conversion automatique en WebP pour un chargement rapide.
 
 ### 🛠 Stack technique
 
-| Catégorie             | Technologies               |
-| --------------------- | -------------------------- |
-| Framework             | React 19 + Vite            |
-| Langage               | JavaScript / JSX           |
-| Package manager       | Bun                        |
-| Styling               | Styled Components + SCSS   |
-| Authentification & DB | Firebase (Auth, Firestore) |
-| Paiement              | Stripe API                 |
-| State Management      | Zustand                    |
+| Catégorie             | Technologies                         |
+| --------------------- | ------------------------------------ |
+| Framework             | React 19 + Vite                      |
+| Langage               | JavaScript / JSX                     |
+| Package manager       | Bun                                  |
+| Styling               | Styled Components + SCSS             |
+| Notifications         | Sonner (toasts personnalisés)        |
+| Authentification & DB | Firebase (Auth, Firestore)           |
+| Paiement              | Stripe API                           |
+| State Management      | Zustand                              |
 
 ### 📁 Structure du projet
 
@@ -61,17 +64,22 @@ style-d/
 │   ├── actions/
 │   │   └── createCheckoutSession.js # Connexion à l'API Stripe
 │   ├── assets/                      # Logos et SVG
-│   ├── components/                  # Tous les composants UI réutilisables
+│   ├── components/                  # Composants UI réutilisables
+│   │   ├── checkout-item/           # Lignes d'articles checkout avec steppers
+│   │   ├── confirm-delete-modal/    # Modale de confirmation de suppression
 │   │   └── protected-route/         # Logique de protection des pages
 │   ├── libs/
 │   │   └── firebase/                # Initialisation de Firebase
-│   ├── routes/                      # Les vues principales
+│   ├── routes/                      # Vues principales
 │   │   ├── authentication/
 │   │   ├── checkout/
+│   │   ├── failure/
 │   │   ├── home/
+│   │   ├── navigation/
+│   │   ├── orders/
 │   │   ├── shop/
 │   │   └── success/
-│   ├── stores/                      # Mes 3 stores Zustand
+│   ├── stores/                      # Stores Zustand (cart, user, categories)
 │   ├── utils/
 │   │   └── firestoreInteractions.js # Appels à la base de données
 │   ├── App.jsx                      # Le routeur
@@ -101,45 +109,48 @@ Direction [http://localhost:5173](http://localhost:5173).
 
 ### 📋 Overview
 
-Welcome to the source code of **Style-D**. I wanted to challenge myself by building an e-commerce experience. The goal wasn't just to make a pretty storefront, but a fully functional app: browsing the catalog, managing a cart, secure authentication, all the way down to the final checkout via the Stripe API.
+Welcome to the source code of **Style-D**, a streetwear e-commerce web app built with React and Vite. The goal was to build a clean, responsive, and functional store: browsing the catalog, cart management with multi-selection, Firebase authentication, order history, and secure Stripe checkout.
 
 ### 📑 Pages
 
 | Route                   | What's there                                                                                      |
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| `/` (Home)              | The main storefront, featuring large images optimized on the fly, and quick access to categories. |
-| `/shop`                 | The full catalog. You can scroll through all items or filter by category (hats, sneakers, etc.).  |
-| `/auth`                 | The login/registration page, handled by Firebase Auth (email or Google account).                  |
-| `/checkout`             | The cart summary. I protected this route: you can't access it unless you're logged in.            |
-| `/success` & `/failure` | The Stripe return pages, which take care of confirming the order and safely clearing the cart.    |
+| `/` (Home)              | Main storefront with animated banners, direct category links, and optimized images.               |
+| `/shop`                 | Full catalog with category filtering (hats, jackets, sneakers, etc.).                              |
+| `/auth`                 | Sign-in and registration page (email/password or Google sign-in via Firebase Auth).                |
+| `/checkout`             | Cart summary, multi-item checkbox selection, bulk delete modal, Stripe test card & mobile layout. |
+| `/orders`               | Order history with status and purchased item details.                                             |
+| `/success` & `/failure` | Post-payment return pages confirming orders and resetting cart state.                             |
 
 ### 🌍 Global State with Zustand
 
-Instead of bringing out the heavy artillery with Redux or wrestling with complex React Contexts, I went with **Zustand**. It's lightweight, fast, and allowed me to keep my logic very clean:
+Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity and light footprint:
 
-- `cartStore`: Handles adding/removing items, calculating totals, and syncing the cart to the database.
-- `userStore`: Listens to Firebase to track the user's authentication state.
-- `categoriesStore`: Fetches the entire catalog from Firestore and caches it.
+- `cartStore`: Adding/removing items, multi-selection, total calculations, delete confirmation modal, and sync.
+- `userStore`: Manages auth state from Firebase.
+- `categoriesStore`: Loads and caches the product catalog from Firestore.
 
-### 🔒 Security and Payment Flow
+### ✨ Key Features
 
-I wanted the payment logic to be solid, even for a portfolio project:
-
-- **Protected Routes**: The `ProtectedRoute` component smoothly redirects anyone trying to hit `/checkout` without being logged in.
-- **Cart Reliability**: The cart is _only_ cleared after returning from Stripe with a confirmed order. If a user bails on the payment page, their cart items are waiting right where they left them.
-- **Image Optimization**: I set up a CDN proxy (Weserv) to resize and convert heavy images to WebP on the fly. The site loads instantly.
+- **Cart Management**: Multi-item selection with checkboxes, bulk action toolbar, and delete confirmation modal.
+- **Toast Notifications**: Interactive toasts with animated progress timer, hover pause, and click to dismiss.
+- **Stripe Test Card**: Visual card preview displaying test credentials for easy checkout testing across all screen sizes.
+- **Mobile Responsive**: Clean and centered layout tuned for mobile devices, including smaller viewports (< 380px).
+- **Protected Routes**: Automatic redirect for unauthenticated users trying to access checkout or orders.
+- **Optimized Images**: Automatic WebP resizing and caching proxy for fast loading.
 
 ### 🛠 Tech stack
 
-| Category         | Technologies               |
-| ---------------- | -------------------------- |
-| Framework        | React 19 + Vite            |
-| Language         | JavaScript / JSX           |
-| Package manager  | Bun                        |
-| Styling          | Styled Components + SCSS   |
-| Auth & Database  | Firebase (Auth, Firestore) |
-| Payment          | Stripe API                 |
-| State Management | Zustand                    |
+| Category         | Technologies                         |
+| ---------------- | ------------------------------------ |
+| Framework        | React 19 + Vite                      |
+| Language         | JavaScript / JSX                     |
+| Package manager  | Bun                                  |
+| Styling          | Styled Components + SCSS             |
+| Notifications    | Sonner (custom toasts)               |
+| Auth & Database  | Firebase (Auth, Firestore)           |
+| Payment          | Stripe API                           |
+| State Management | Zustand                              |
 
 ### 📁 Project structure
 
@@ -150,17 +161,22 @@ style-d/
 │   ├── actions/
 │   │   └── createCheckoutSession.js # Stripe API connection
 │   ├── assets/                      # Logos and SVGs
-│   ├── components/                  # All reusable UI components
+│   ├── components/                  # Reusable UI components
+│   │   ├── checkout-item/           # Checkout product rows & steppers
+│   │   ├── confirm-delete-modal/    # Deletion confirmation modal
 │   │   └── protected-route/         # Page protection logic
 │   ├── libs/
 │   │   └── firebase/                # Firebase initialization
 │   ├── routes/                      # Main views
 │   │   ├── authentication/
 │   │   ├── checkout/
+│   │   ├── failure/
 │   │   ├── home/
+│   │   ├── navigation/
+│   │   ├── orders/
 │   │   ├── shop/
 │   │   └── success/
-│   ├── stores/                      # My 3 Zustand stores
+│   ├── stores/                      # Zustand stores (cart, user, categories)
 │   ├── utils/
 │   │   └── firestoreInteractions.js # Database calls
 │   ├── App.jsx                      # Router

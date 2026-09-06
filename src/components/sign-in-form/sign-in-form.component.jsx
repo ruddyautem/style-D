@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import Button, { BUTTON_TYPE_CLASSES } from "../button/button.component";
 import FormInput from "../form-input/form-input.component";
 
 import {
-
-  signInWithGooglePopup
+  signInWithGooglePopup,
+  signInAuthUserWithEmailAndPassword,
 } from "../../libs/firebase/firebase.utils.js";
 
 import { ButtonContainer, SignUpContainer } from "./sign-in-form.styles.jsx";
@@ -21,13 +22,21 @@ const SignInForm = () => {
   const { email, password } = formFields;
   const navigate = useNavigate();
 
+  const resetFormFields = () => {
+    setFormFields(defaultFormFields);
+  };
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithGooglePopup();
+      const result = await signInWithGooglePopup();
+      const displayName = result?.user?.displayName || "Bienvenue";
+      toast.success(`Connexion réussie ! Heureux de vous revoir, ${displayName}.`);
       navigate("/");
     } catch (error) {
-      console.error("Error signing in with Google:", error);
+      if (error.code !== "auth/popup-closed-by-user") {
+        console.error("Error signing in with Google:", error);
+        toast.error("Erreur lors de la connexion avec Google.");
+      }
     }
   };
 
@@ -35,18 +44,26 @@ const SignInForm = () => {
     event.preventDefault();
 
     try {
-
+      const userCredential = await signInAuthUserWithEmailAndPassword(email, password);
+      const name = userCredential?.user?.displayName || email.split("@")[0];
+      toast.success(`Connexion réussie ! Bienvenue, ${name}.`);
+      resetFormFields();
       navigate("/");
     } catch (error) {
       switch (error.code) {
         case "auth/wrong-password":
+        case "auth/invalid-credential":
           alert("Adresse email ou mot de passe incorrect");
           break;
         case "auth/user-not-found":
           alert("Aucun utilisateur associé à cet email");
           break;
+        case "auth/too-many-requests":
+          alert("Trop de tentatives infructueuses. Veuillez réessayer plus tard.");
+          break;
         default:
-          console.log(error);
+          console.error("Erreur de connexion :", error);
+          alert("Échec de la connexion. Vérifiez vos identifiants.");
       }
     }
   };

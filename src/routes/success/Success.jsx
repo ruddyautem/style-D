@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Container, Title, Message, OrderNumber } from "./Success.styles";
+import { Container, Title, Message, OrderNumberSection, OrderNumberContainer, ActionsContainer } from "./Success.styles";
 import { useNavigate, useLocation } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
 import Button from "../../components/button/button.component";
+import { fetchOrderFromFirestore } from "../../utils/firestoreInteractions";
 
 const Success = () => {
   const navigate = useNavigate();
@@ -25,12 +26,27 @@ const Success = () => {
         return;
       }
 
+      if (!userId) {
+        // Wait for auth to be ready
+        return;
+      }
+
+      // Check if order was already saved previously (e.g. page refresh)
+      try {
+        const existingOrder = await fetchOrderFromFirestore(userId, sessionId);
+        if (existingOrder) {
+          setOrderId(existingOrder.orderNumber || existingOrder.id);
+          return;
+        }
+      } catch (err) {
+        console.warn("Could not check existing order:", err);
+      }
+
       // If we already saved this order in a previous render, don't do it again
       if (hasSavedOrder.current) return;
 
-      if (!userId || cartProducts.length === 0) {
-        // We might be waiting for auth to initialize or cart to fetch.
-        // If they just navigated here manually with an empty cart, they won't get an order.
+      if (cartProducts.length === 0) {
+        // Cart is empty and no existing order found in DB
         return;
       }
 
@@ -80,16 +96,28 @@ const Success = () => {
       </Container>
     );
 
+  const formattedOrderNumber = orderId.startsWith("#") ? orderId : `#${orderId}`;
+
   return (
     <Container>
       <Title>Merci pour votre commande!</Title>
-      <OrderNumber>
-        Numéro de commande : <span>{orderId}</span>
-      </OrderNumber>
+      
+      <OrderNumberSection>
+        <span className="order-number-label">NUMÉRO DE COMMANDE</span>
+        <OrderNumberContainer>
+          <span className="number">{formattedOrderNumber}</span>
+        </OrderNumberContainer>
+      </OrderNumberSection>
+
       <Message>Elle est bien prise en compte et sera bientôt traitée.</Message>
-      <Button buttonType='base' onClick={() => navigate("/")}>
-        Retourner à l'accueil
-      </Button>
+      <ActionsContainer>
+        <Button buttonType='base' onClick={() => navigate("/orders")}>
+          Voir votre commande
+        </Button>
+        <Button buttonType='inverted' onClick={() => navigate("/")}>
+          Retourner à l'accueil
+        </Button>
+      </ActionsContainer>
     </Container>
   );
 };

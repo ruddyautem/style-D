@@ -1,44 +1,611 @@
-import { Fragment } from "react";
-import { Outlet } from "react-router-dom";
-import CartIcon from "../../components/cart-icon/cart-icon.component";
-import CartDropdown from "../../components/cart-dropdown/cart-dropdown.component";
-import StyleD from "../../assets/styled.svg?react";
+import { useState, useRef, useEffect } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { CartDrawerView } from "../../components/cart-dropdown/cart-dropdown.component";
 import { signOutUser } from "../../libs/firebase/firebase.utils";
 import useUserStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
 
+import ShoppingBag from "../../assets/shopping-bag.svg?react";
+
 import {
+  LayoutContainer,
+  MainContent,
   NavigationContainer,
-  NavLinks,
-  NavLink,
+  NavSection,
   LogoContainer,
+  NavItem,
+  CartButton,
+  AccountIconButton,
+  UnifiedDrawerBackdrop,
+  UnifiedDrawerContainer,
+  DrawerContentWrapper,
+  AccountDrawerHeader,
+  AccountDrawerBody,
+  AccountUserCard,
+  AccountGuestCard,
+  AccountPrimaryButton,
+  AccountDrawerItem,
+  AccountDrawerFooter,
+  AccountLogoutButton,
+  DrawerSectionLabel,
+  NavMenuButton,
+  NavPillContainer,
+  SlidingPill,
+  CategoryPillItem,
+  SideMenuHeader,
+  SideMenuBody,
+  SideMenuCategoryItem,
+  SideMenuFooter,
+  SideMenuLink,
+  MobileBottomBar,
+  MobileBottomLeft,
+  MobileBottomCenter,
+  MobileBottomRight,
+  MobileBottomCategoryButton,
+  MobileBottomButton,
+  MobileBottomCartIconButton,
+  FooterContainer,
 } from "./navigation.styles";
+
+const UserIcon = ({ className, size = 20, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const LogoutIcon = ({ size = 14, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
+const PackageIcon = ({ size = 14, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="m7.5 4.27 9 5.15" />
+    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+    <path d="m3.3 7 8.7 5 8.7-5" />
+    <path d="M12 22V12" />
+  </svg>
+);
+
+const HamburgerIcon = ({ size = 20, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
+const DeliveryTruckIcon = ({ size = 12, className, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11" />
+    <path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2" />
+    <circle cx="7" cy="18" r="2" />
+    <circle cx="17" cy="18" r="2" />
+  </svg>
+);
+
+const MobileCartIcon = ({ count }) => (
+  <svg
+    viewBox="0 -8.1 407.453 407.453"
+    className="cart-svg-icon"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g fill="currentColor" stroke="currentColor" strokeWidth="14" strokeLinejoin="round">
+      {/* Top rim */}
+      <path d="M255.099,116.515c4.487,0,8.129-3.633,8.129-8.129c0-4.495-3.642-8.129-8.129-8.129H143.486 c-4.487,0-8.129,3.633-8.129,8.129c0,4.495,3.642,8.129,8.129,8.129H255.099z" />
+      {/* Bag body outline */}
+      <path d="M367.062,100.258H311.69c-4.487,0-8.129,3.633-8.129,8.129c0,4.495,3.642,8.129,8.129,8.129h47.243 v274.681H48.519V116.515h44.536c4.487,0,8.129-3.633,8.129-8.129c0-4.495-3.642-8.129-8.129-8.129H40.391 c-4.487,0-8.129,3.633-8.129,8.129v290.938c0,4.495,3.642,8.129,8.129,8.129h326.671c4.487,0,8.129-3.633,8.129-8.129V108.386 C375.191,103.891,371.557,100.258,367.062,100.258z" />
+      {/* Handle arch */}
+      <path d="M282.59,134.796c4.487,0,8.129-3.633,8.129-8.129V67.394C290.718,30.238,250.604,0,201.101,0 c-49.308,0-89.414,30.238-89.414,67.394v59.274c0,4.495,3.642,8.129,8.129,8.129s8.129-3.633,8.129-8.129V67.394 c0-28.198,32.823-51.137,73.36-51.137c40.334,0,73.157,22.939,73.157,51.137v59.274 C274.461,131.163,278.095,134.796,282.59,134.796z" />
+    </g>
+    {/* Cleanly centered bold numeral */}
+    <text
+      x="203.7"
+      y="248"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="currentColor"
+      fontSize={count > 9 ? "185" : "215"}
+      fontWeight="900"
+      fontFamily="var(--font-sans)"
+      letterSpacing="-1"
+    >
+      {count}
+    </text>
+  </svg>
+);
+
+const CATEGORIES_LIST = [
+  { id: "homme", label: "HOMME", tag: "SÉRIE 01" },
+  { id: "femme", label: "FEMME", tag: "SÉRIE 02" },
+  { id: "vestes", label: "VESTES", tag: "SÉRIE 03" },
+  { id: "baskets", label: "BASKETS", tag: "SÉRIE 04" },
+  { id: "chapeaux", label: "CHAPEAUX", tag: "SÉRIE 05" },
+];
 
 const Navigation = () => {
   const currentUser = useUserStore((state) => state.currentUser);
-  const { isCartOpen } = useCartStore();
+  const { isCartOpen, setIsCartOpen, cartCount } = useCartStore();
+  const [activeDrawer, setActiveDrawer] = useState(null); // 'menu' | 'account' | 'cart' | null
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleDrawerToggle = (drawerType) => {
+    setActiveDrawer((prev) => (prev === drawerType ? null : drawerType));
+  };
+
+  const closeDrawer = () => {
+    setActiveDrawer(null);
+  };
+
+  const handleSignOut = async () => {
+    closeDrawer();
+    await signOutUser();
+    toast.success("Déconnexion réussie. À bientôt !");
+  };
+
+  // Sync cart store isCartOpen with activeDrawer === 'cart'
+  useEffect(() => {
+    setIsCartOpen(activeDrawer === "cart");
+  }, [activeDrawer, setIsCartOpen]);
+
+  useEffect(() => {
+    if (isCartOpen && activeDrawer !== "cart") {
+      setActiveDrawer("cart");
+    }
+  }, [isCartOpen]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setActiveDrawer(null);
+      }
+    };
+
+    if (activeDrawer !== null) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeDrawer]);
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (activeDrawer !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [activeDrawer]);
+
+  // Sliding pill navigation state
+  const [hoveredCatId, setHoveredCatId] = useState(null);
+  const [pillStyle, setPillStyle] = useState({ left: 0, top: 0, width: 0, height: 0, visible: false });
+  const navPillContainerRef = useRef(null);
+  const itemRefs = useRef({});
+
+  // Active category derived from location
+  const activeCatId = CATEGORIES_LIST.find(
+    (cat) => location.pathname === `/shop/${cat.id}`
+  )?.id || null;
+
+  // Compute position of target element inside NavPillContainer
+  const updatePillPosition = (targetId) => {
+    if (!targetId || !itemRefs.current[targetId] || !navPillContainerRef.current) {
+      setPillStyle((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const containerRect = navPillContainerRef.current.getBoundingClientRect();
+    const itemRect = itemRefs.current[targetId].getBoundingClientRect();
+
+    setPillStyle({
+      left: itemRect.left - containerRect.left,
+      top: itemRect.top - containerRect.top,
+      width: itemRect.width,
+      height: itemRect.height,
+      visible: true,
+    });
+  };
+
+  // Target to highlight: hovered item takes priority, otherwise falls back to active category
+  const currentPillTarget = hoveredCatId || activeCatId;
+
+  useEffect(() => {
+    updatePillPosition(currentPillTarget);
+  }, [currentPillTarget, location.pathname]);
+
+  // Handle window resize for accurate pill positioning
+  useEffect(() => {
+    const handleResize = () => {
+      updatePillPosition(currentPillTarget);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [currentPillTarget]);
+
+  // Close menus on route navigation
+  useEffect(() => {
+    setActiveDrawer(null);
+    setHoveredCatId(null);
+  }, [location.pathname]);
+
+  const isCheckoutPage =
+    location.pathname === "/checkout" || location.pathname.startsWith("/checkout");
+
+  const isOrdersPage =
+    location.pathname === "/orders" || location.pathname.startsWith("/orders");
+
+  const hideTopCategories = isCheckoutPage || isOrdersPage;
+
+  const currentYear = new Date().getFullYear();
 
   return (
-    <Fragment>
-      <NavigationContainer>
-        <LogoContainer to='/'>
-          <span>STYLE</span>
-          <StyleD />
+    <LayoutContainer>
+      <NavigationContainer className={hideTopCategories ? "checkout-nav" : ""}>
+        {/* Zone 1: Brand Identity Mark with black STYLE container and red D badge (Gauche) */}
+        <LogoContainer to='/' title="Accueil style-d" aria-label="Accueil style-d">
+          <span className='brand-text'>STYLE</span>
+          <span className='brand-badge-d'>D</span>
         </LogoContainer>
 
-        <NavLinks>
-          <NavLink to='/shop'>Boutique</NavLink>
-          {currentUser ? (
-            <NavLink as='span' onClick={signOutUser}>Déconnexion</NavLink>
-          ) : (
-            <NavLink to='/auth'>Connexion</NavLink>
+        {/* Zone 2: All categories displayed in top navigation bar with sliding pill (Hidden on payment & orders pages) */}
+        {!hideTopCategories ? (
+          <NavSection className='center'>
+            <NavPillContainer
+              ref={navPillContainerRef}
+              onMouseLeave={() => setHoveredCatId(null)}
+            >
+              {/* Smooth animated sliding pill element */}
+              <SlidingPill
+                $left={pillStyle.left}
+                $top={pillStyle.top}
+                $width={pillStyle.width}
+                $height={pillStyle.height}
+                $visible={pillStyle.visible}
+              />
+
+              {CATEGORIES_LIST.map((cat) => {
+                const isTarget = currentPillTarget === cat.id;
+                return (
+                  <CategoryPillItem
+                    key={cat.id}
+                    ref={(el) => (itemRefs.current[cat.id] = el)}
+                    to={`/shop/${cat.id}`}
+                    $isCurrentTarget={isTarget}
+                    onMouseEnter={() => {
+                      setHoveredCatId(cat.id);
+                      if (location.pathname !== `/shop/${cat.id}`) {
+                        navigate(`/shop/${cat.id}`);
+                      }
+                    }}
+                  >
+                    {cat.label}
+                  </CategoryPillItem>
+                );
+              })}
+            </NavPillContainer>
+          </NavSection>
+        ) : (
+          <div style={{ gridColumn: 2 }} />
+        )}
+
+        {/* Zone 3: 3 buttons on the right: Menu (Hamburger), Compte, Panier */}
+        <NavSection className='right'>
+          {/* 1. Hamburger menu button (Always visible at top right) */}
+          <NavMenuButton
+            onClick={() => handleDrawerToggle("menu")}
+            title="Menu des catégories"
+            aria-label="Menu des catégories"
+            $isOpen={activeDrawer === "menu"}
+          >
+            <HamburgerIcon className="hamburger-icon" />
+          </NavMenuButton>
+
+          {/* 2. Account button (Desktop only - user icon button) */}
+          <AccountIconButton
+            className="desktop-only-action"
+            onClick={() => handleDrawerToggle("account")}
+            title="Mon compte"
+            aria-label="Mon compte"
+            $isOpen={activeDrawer === "account"}
+          >
+            <UserIcon className="user-icon" />
+          </AccountIconButton>
+
+          {/* 3. Cart button (Desktop only - hidden on checkout page) */}
+          {!isCheckoutPage && (
+            <CartButton
+              className="desktop-only-action"
+              onClick={() => handleDrawerToggle("cart")}
+              title="Panier"
+              aria-label="Panier"
+              $isActive={activeDrawer === "cart"}
+            >
+              <MobileCartIcon count={cartCount} />
+            </CartButton>
           )}
-          <CartIcon />
-        </NavLinks>
-        {isCartOpen && <CartDropdown />}
+        </NavSection>
       </NavigationContainer>
-      <Outlet />
-    </Fragment>
+
+      {/* Slide-over Unified Drawer: container stays open when switching views, avoiding repeated animations */}
+      <UnifiedDrawerBackdrop $isOpen={activeDrawer !== null} onClick={closeDrawer} />
+      <UnifiedDrawerContainer
+        $isOpen={activeDrawer !== null}
+        onClick={(e) => e.stopPropagation()}
+      >
+          {activeDrawer === "menu" && (
+            <DrawerContentWrapper key="menu">
+              <SideMenuHeader>
+                <h3>CATÉGORIES</h3>
+                <button onClick={closeDrawer}>[ FERMER ]</button>
+              </SideMenuHeader>
+
+              <SideMenuBody>
+                <div className="menu-section-label">RAYONS & SÉRIES</div>
+                <SideMenuCategoryItem to='/shop' onClick={closeDrawer}>
+                  <span className="item-title">TOUTE LA BOUTIQUE</span>
+                  <span className="arrow-indicator">→</span>
+                </SideMenuCategoryItem>
+                {CATEGORIES_LIST.map((cat) => (
+                  <SideMenuCategoryItem
+                    key={cat.id}
+                    to={`/shop/${cat.id}`}
+                    onClick={closeDrawer}
+                  >
+                    <span className="item-title">{cat.label}</span>
+                    <span className="item-tag">{cat.tag}</span>
+                  </SideMenuCategoryItem>
+                ))}
+              </SideMenuBody>
+
+              <SideMenuFooter>
+                {currentUser ? (
+                  <SideMenuLink to='/orders' onClick={closeDrawer}>
+                    <PackageIcon size={14} />
+                    <span>MES COMMANDES</span>
+                  </SideMenuLink>
+                ) : (
+                  <SideMenuLink to='/auth' onClick={closeDrawer}>
+                    <UserIcon size={14} />
+                    <span>CONNEXION / CRÉER UN COMPTE</span>
+                  </SideMenuLink>
+                )}
+                <SideMenuLink
+                  to="/checkout"
+                  className="primary"
+                  onClick={closeDrawer}
+                >
+                  <ShoppingBag style={{ width: 14, height: 14 }} />
+                  <span>OUVRIR LE PANIER ({cartCount})</span>
+                </SideMenuLink>
+              </SideMenuFooter>
+            </DrawerContentWrapper>
+          )}
+
+          {activeDrawer === "account" && (
+            <DrawerContentWrapper key="account">
+              <AccountDrawerHeader>
+                <h3>MON COMPTE</h3>
+                <button onClick={closeDrawer}>[ FERMER ]</button>
+              </AccountDrawerHeader>
+
+              <AccountDrawerBody>
+                {currentUser ? (
+                  <>
+                    <AccountUserCard>
+                      <div className="user-icon-box">
+                        <UserIcon size={22} />
+                      </div>
+                      <div className="user-info">
+                        <div className="status-badge">
+                          <span className="dot" />
+                          <span>CONNECTÉ</span>
+                        </div>
+                        <span className="user-name">
+                          {currentUser.displayName || currentUser.email?.split("@")[0] || "Client"}
+                        </span>
+                        <span className="user-email">{currentUser.email}</span>
+                      </div>
+                    </AccountUserCard>
+
+                    <DrawerSectionLabel>NAVIGATION</DrawerSectionLabel>
+
+                    <AccountDrawerItem to="/orders" onClick={closeDrawer}>
+                      <div className="item-content">
+                        <PackageIcon size={15} />
+                        <span>MES COMMANDES</span>
+                      </div>
+                      <span className="item-arrow">→</span>
+                    </AccountDrawerItem>
+
+                    <AccountDrawerItem
+                      to="/checkout"
+                      onClick={closeDrawer}
+                    >
+                      <div className="item-content">
+                        <ShoppingBag style={{ width: 15, height: 15 }} />
+                        <span>VOIR LE PANIER</span>
+                      </div>
+                      <span className="cart-count-pill">{cartCount}</span>
+                    </AccountDrawerItem>
+
+                    <AccountDrawerItem to="/shop" onClick={closeDrawer}>
+                      <div className="item-content">
+                        <span className="bullet">■</span>
+                        <span>TOUTE LA BOUTIQUE</span>
+                      </div>
+                      <span className="item-arrow">→</span>
+                    </AccountDrawerItem>
+                  </>
+                ) : (
+                  <>
+                    <AccountGuestCard>
+                      <div className="guest-icon-box">
+                        <UserIcon size={26} />
+                      </div>
+                      <h4>ESPACE CLIENT</h4>
+                      <p>
+                        Connectez-vous pour suivre vos commandes, vos favoris et accéder rapidement à votre compte.
+                      </p>
+                    </AccountGuestCard>
+
+                    <AccountPrimaryButton to="/auth" onClick={closeDrawer}>
+                      <span>CONNEXION / S'INSCRIRE</span>
+                      <span>→</span>
+                    </AccountPrimaryButton>
+
+                    <DrawerSectionLabel style={{ marginTop: 8 }}>ACCÈS RAPIDE</DrawerSectionLabel>
+
+                    <AccountDrawerItem to="/orders" onClick={closeDrawer}>
+                      <div className="item-content">
+                        <PackageIcon size={15} />
+                        <span>SUIVRE UNE COMMANDE</span>
+                      </div>
+                      <span className="item-arrow">→</span>
+                    </AccountDrawerItem>
+
+                    <AccountDrawerItem
+                      to="/checkout"
+                      onClick={closeDrawer}
+                    >
+                      <div className="item-content">
+                        <ShoppingBag style={{ width: 15, height: 15 }} />
+                        <span>VOIR LE PANIER</span>
+                      </div>
+                      <span className="cart-count-pill">{cartCount}</span>
+                    </AccountDrawerItem>
+                  </>
+                )}
+              </AccountDrawerBody>
+
+              {currentUser && (
+                <AccountDrawerFooter>
+                  <AccountLogoutButton onClick={handleSignOut}>
+                    <LogoutIcon size={15} />
+                    <span>SE DÉCONNECTER</span>
+                  </AccountLogoutButton>
+                </AccountDrawerFooter>
+              )}
+            </DrawerContentWrapper>
+          )}
+
+          {activeDrawer === "cart" && (
+            <DrawerContentWrapper key="cart">
+              <CartDrawerView onClose={closeDrawer} />
+            </DrawerContentWrapper>
+          )}
+        </UnifiedDrawerContainer>
+
+      {/* Barre de navigation mobile en bas */}
+      <MobileBottomBar>
+        <MobileBottomLeft>
+          {/* Bouton Hamburger Catégories */}
+          <MobileBottomCategoryButton
+            onClick={() => handleDrawerToggle("menu")}
+            $isActive={activeDrawer === "menu"}
+            title="Catégories"
+            aria-label="Catégories"
+          >
+            <HamburgerIcon size={18} className="hamburger-icon" />
+          </MobileBottomCategoryButton>
+        </MobileBottomLeft>
+
+        <MobileBottomRight>
+          {/* Juste à côté le compte (juste l'icône, sans écriture ni point lumineux) */}
+          <MobileBottomButton
+            onClick={() => handleDrawerToggle("account")}
+            $isActive={activeDrawer === "account"}
+            title="Mon compte"
+            aria-label="Mon compte"
+          >
+            <UserIcon size={19} className="user-icon" />
+          </MobileBottomButton>
+
+          {/* En bas à droite le panier avec icône et nombre au milieu */}
+          <MobileBottomCartIconButton
+            onClick={() => handleDrawerToggle("cart")}
+            $isActive={activeDrawer === "cart"}
+            title="Panier"
+            aria-label="Panier"
+          >
+            <MobileCartIcon count={cartCount} />
+          </MobileBottomCartIconButton>
+        </MobileBottomRight>
+      </MobileBottomBar>
+
+      <MainContent>
+        <Outlet />
+      </MainContent>
+
+      <FooterContainer>
+        © {currentYear} style-d.autem.dev — Tous droits réservés.
+      </FooterContainer>
+    </LayoutContainer>
   );
 };
 

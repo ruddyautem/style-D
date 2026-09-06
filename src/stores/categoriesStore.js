@@ -1,20 +1,24 @@
-// stores/categoriesStore.js
 import { create } from "zustand";
 import { getCategoriesAndDocuments } from "../utils/firestoreInteractions";
+import SHOP_DATA from "../shop-data";
 
+const fallbackCategoriesMap = Object.fromEntries(
+  SHOP_DATA.map((cat) => [cat.title.toLowerCase(), cat.items])
+);
 
 const useCategoriesStore = create((set) => ({
-  categoriesMap: {},
-  isLoading: true,
+  categoriesMap: fallbackCategoriesMap,
+  isLoading: false,
   error: null,
   fetchCategories: async () => {
-    set({ isLoading: true, error: null });
     try {
       const categoryMap = await getCategoriesAndDocuments();
-      set({ categoriesMap: categoryMap, isLoading: false });
+      if (categoryMap && Object.keys(categoryMap).length > 0) {
+        set({ categoriesMap: categoryMap, isLoading: false, error: null });
+      }
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      set({ error: error.message, isLoading: false });
+      console.warn("Firestore categories fetch note, using local SHOP_DATA:", error.message);
+      set({ categoriesMap: fallbackCategoriesMap, isLoading: false });
     }
   },
 }));

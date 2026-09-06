@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ProductCardContainer,
   Footer,
@@ -22,6 +23,7 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     
     if (!currentUser) {
+      toast.info("Veuillez vous connecter pour enregistrer votre panier.");
       navigate("/auth");
       return;
     }
@@ -34,10 +36,15 @@ const ProductCard = ({ product }) => {
       "add"
     );
 
-    // Reset button text after 2 seconds
+    // Sonner notification
+    toast.success(`${name} ajouté au panier`, {
+      description: `${price} €`,
+    });
+
+    // Reset button text after short delay
     setTimeout(() => {
       setIsAdded(false);
-    }, 400);
+    }, 500);
   };
 
   // Logic for dynamic button text
@@ -49,18 +56,24 @@ const ProductCard = ({ product }) => {
 
   return (
     <ProductCardContainer>
-      <img src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=400&output=webp`} alt={name} loading="lazy" />
+      <div className="img-container">
+        <img
+          src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=600&output=webp`}
+          alt={name}
+          loading="lazy"
+        />
+        <Button
+          buttonType={isAdded ? BUTTON_TYPE_CLASSES.base : BUTTON_TYPE_CLASSES.inverted}
+          onClick={handleAddToCart}
+          disabled={isAdded}
+        >
+          {getButtonText()}
+        </Button>
+      </div>
       <Footer>
         <Name>{name}</Name>
-        <Price>{price}€</Price>
+        <Price>{price} €</Price>
       </Footer>
-      <Button
-        buttonType={isAdded ? BUTTON_TYPE_CLASSES.base : BUTTON_TYPE_CLASSES.inverted}
-        onClick={handleAddToCart}
-        disabled={isAdded} // Optional: disable while showing "Added" to prevent double-clicks
-      >
-        {getButtonText()}
-      </Button>
     </ProductCardContainer>
   );
 };

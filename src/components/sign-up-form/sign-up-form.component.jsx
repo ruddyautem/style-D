@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button.component";
@@ -29,7 +30,7 @@ const SignUpForm = () => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("passwords do not match");
+      toast.error("Les mots de passe ne correspondent pas.");
       return;
     }
 
@@ -41,12 +42,16 @@ const SignUpForm = () => {
 
       await createUserDocumentFromAuth(user, { displayName });
 
+      toast.success(`Compte créé avec succès ! Bienvenue chez STYLE — D, ${displayName || user.email}.`);
       resetFormFields();
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
-        alert("Cannot create user, email already in use");
+        toast.error("Cette adresse email est déjà utilisée.");
+      } else if (error.code === "auth/weak-password") {
+        toast.error("Le mot de passe doit comporter au moins 6 caractères.");
       } else {
-        console.log("user creation encountered an error", error);
+        console.error("user creation encountered an error", error);
+        toast.error("Erreur lors de la création du compte.");
       }
     }
   };

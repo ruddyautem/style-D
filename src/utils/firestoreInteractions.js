@@ -6,6 +6,8 @@ import {
   getDocs,
   serverTimestamp,
   getDoc,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "../libs/firebase/firebase.utils.js";
 
@@ -160,6 +162,22 @@ export const clearUserCart = async (userId) => {
   }
 };
 
+// Generates a simple sequence of digits (e.g. 21286759)
+export const generateOrderNumber = (sessionId) => {
+  if (!sessionId) {
+    return String(Math.floor(10000000 + Math.random() * 90000000));
+  }
+
+  // Deterministic FNV-1a 32-bit hash from sessionId for idempotent generation
+  let h = 0x811c9dc5;
+  for (let i = 0; i < sessionId.length; i++) {
+    h ^= sessionId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  const num = 10000000 + (Math.abs(h) % 90000000);
+  return String(num);
+};
+
 export const saveOrderToFirestore = async (
   userId,
   sessionId,
@@ -167,13 +185,14 @@ export const saveOrderToFirestore = async (
   paymentStatus,
 ) => {
   try {
-    const orderId = sessionId.slice(6);
+    const orderNumber = generateOrderNumber(sessionId);
     const totalPrice = cartItems.reduce(
       (total, item) => total + (item.price || 0) * (item.quantity || 0),
       0,
     );
 
-    await setDoc(doc(db, "users", userId, "orders", orderId), {
+    await setDoc(doc(db, "users", userId, "orders", orderNumber), {
+      orderNumber,
       sessionId,
       items: cartItems.map((item) => ({
         ...item,
@@ -184,9 +203,79 @@ export const saveOrderToFirestore = async (
       createdAt: serverTimestamp(),
     });
 
-    return orderId;
+    return orderNumber;
   } catch (error) {
     console.error(`Error saving order:`, error);
     throw error;
   }
 };
+
+export const fetchOrderFromFirestore = async (userId, sessionId) => {
+  try {
+    if (!userId || !sessionId) return null;
+    const orderNumber = generateOrderNumber(sessionId);
+
+    // 1. Try finding by orderNumber document ID
+    const orderDoc = await getDoc(doc(db, "users", userId, "orders", orderNumber));
+    if (orderDoc.exists()) {
+      return { id: orderDoc.id, orderNumber, ...orderDoc.data() };
+    }
+
+    // 2. Try legacy doc ID (sessionId.slice(6))
+    const legacyDoc = await getDoc(doc(db, "users", userId, "orders", sessionId.slice(6)));
+    if (legacyDoc.exists()) {
+      return { id: legacyDoc.id, orderNumber, ...legacyDoc.data() };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error checking existing order:", error);
+    return null;
+  }
+};
+
+export const fetchUserOrders = async (userId) => {
+  if (!userId) return [];
+  try {
+    const ordersRef = collection(db, "users", userId, "orders");
+    let snapshot;
+    try {
+      const q = query(ordersRef, orderBy("createdAt", "desc"));
+      snapshot = await getDocs(q);
+    } catch (orderErr) {
+      console.warn("Falling back to client-side sorting for orders:", orderErr);
+      snapshot = await getDocs(ordersRef);
+    }
+
+    const orders = snapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      const orderNumber =
+        data.orderNumber && /^\d{6,12}$/.test(data.orderNumber)
+          ? data.orderNumber
+          : generateOrderNumber(data.sessionId || docSnap.id);
+      return {
+        id: docSnap.id,
+        orderNumber,
+        ...data,
+      };
+    });
+
+    return orders.sort((a, b) => {
+      const timeA = a.createdAt?.toMillis
+        ? a.createdAt.toMillis()
+        : a.createdAt?.seconds
+          ? a.createdAt.seconds * 1000
+          : 0;
+      const timeB = b.createdAt?.toMillis
+        ? b.createdAt.toMillis()
+        : b.createdAt?.seconds
+          ? b.createdAt.seconds * 1000
+          : 0;
+      return timeB - timeA;
+    });
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    return [];
+  }
+};
+

@@ -1,49 +1,62 @@
 import styled from "styled-components";
 
-export const DirectoryContainer = styled.div`
+export const HomepageContainer = styled.div`
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 350px;
-  gap: 2px;
-  background-color: #f0f0f0;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
 
-  /* DESKTOP: 5 items in a 4-column grid */
-  & > div:nth-child(1) { grid-column: span 2; grid-row: span 2; } 
-  & > div:nth-child(2) { grid-column: span 2; grid-row: span 1; }
-  & > div:nth-child(3) { grid-column: span 1; grid-row: span 1; }
-  & > div:nth-child(4) { grid-column: span 1; grid-row: span 1; }
-  & > div:nth-child(5) { grid-column: span 2; grid-row: span 1; }
-
-  /* TABLET: 2 columns */
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 300px;
-    
-    /* We reset ALL children to span only 1 column/row by default */
-    & > div { 
-      grid-column: span 1 !important; 
-      grid-row: span 1 !important; 
-    }
-    
-    /* We only make the first one wide for visual balance */
-    & > div:nth-child(1) { 
-      grid-column: span 2 !important; 
-    }
+  @media (min-width: 900px) {
+    height: calc(100vh - 115px);
+    max-height: calc(100vh - 115px);
+    padding: 14px 32px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
-  /* MOBILE: 1 column - This fixes the missing items */
-  @media (max-width: 600px) {
-    display: flex;             /* Switching to Flex is safer for a single column stack */
+  @media (max-width: 899px) {
+    padding: 16px;
+    height: auto;
+    overflow: visible;
+  }
+`;
+
+export const DirectoryGrid = styled.div`
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: 1.35fr 1fr;
+  gap: 14px;
+
+  /* Top row: 2 Primary Collections (Femme & Homme) */
+  & > div:nth-child(1),
+  & > div:nth-child(2) {
+    grid-column: span 3;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Bottom row: 3 Sub-Collections (Vestes, Baskets, Chapeaux) */
+  & > div:nth-child(3),
+  & > div:nth-child(4),
+  & > div:nth-child(5) {
+    grid-column: span 2;
+    height: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 899px) {
+    display: flex;
     flex-direction: column;
-    background-color: transparent; /* Remove hairline look for cleaner mobile view */
-    gap: 10px;                 /* Add a little breathing room between cards */
-    
-    & > div { 
-      width: 100%;
-      height: 400px;           /* Set a fixed height for the mobile cards */
-      grid-column: auto !important; 
-      grid-row: auto !important;
+    gap: 16px;
+    height: auto;
+
+    & > div {
+      width: 100% !important;
+      height: 340px !important;
     }
   }
 `;

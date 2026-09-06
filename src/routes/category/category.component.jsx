@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ProductCard from "../../components/product-card/product-card.component";
 import useCategoriesStore from "../../stores/categoriesStore";
-
-import { CategoryTitle, CategoryContainer } from "./category.styles";
+import {
+  CategoryPageWrapper,
+  CategoryContainer,
+} from "./category.styles";
 import { IsLoading } from "../../components/category-preview/category-preview.styles";
 
 const Category = () => {
@@ -16,24 +18,27 @@ const Category = () => {
     }
   }, [fetchCategories, categoriesMap]);
 
-  const products = categoriesMap[category];
+  const products = categoriesMap[category] || [];
 
   return (
-    <div style={{ paddingBottom: '100px' }}>
-      <CategoryTitle>{category}</CategoryTitle>
+    <CategoryPageWrapper>
       {isLoading ? (
-        <IsLoading style={{ textAlign: 'center', width: '100%' }}>
-          Chargement des articles...
+        <IsLoading style={{ textAlign: "center", width: "100%" }}>
+          Chargement de la collection...
         </IsLoading>
       ) : (
         <CategoryContainer>
-          {products?.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-          {!products && <p>Aucun article disponible.</p>}
+          {products.length === 0 && (
+            <p style={{ textAlign: "center", width: "100%" }}>
+              Aucun article disponible.
+            </p>
+          )}
         </CategoryContainer>
       )}
-    </div>
+    </CategoryPageWrapper>
   );
 };
 

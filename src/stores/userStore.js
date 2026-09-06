@@ -65,8 +65,6 @@ const handleUserLogin = async (user) => {
       displayName: user.displayName || user.email || "",
     });
 
-    const cartData = await fetchUserCart(user.uid);
-
     // Use set method
     useUserStore.getState().setCurrentUser({
       ...user,
@@ -74,11 +72,7 @@ const handleUserLogin = async (user) => {
       displayName: user.displayName,
     });
 
-    setUserId(user.uid);
-
-    if (cartData && cartData.length > 0) {
-      setCartProducts(cartData);
-    }
+    await setUserId(user.uid);
   } catch (error) {
     console.error("Error during user login handling:", error);
   }
@@ -89,13 +83,13 @@ const handleUserLogin = async (user) => {
 
 // Logout handler
 const handleUserLogout = () => {
-  const { resetLocalCart } = useCartStore.getState();
+  const { resetLocalCart, setUserId } = useCartStore.getState();
 
-  
   useUserStore.getState().setCurrentUser(null);
+  setUserId(null);
   resetLocalCart(); // Ne touche que le state local
 
-  useUserStore.getState().setIsInitializing(true);
+  useUserStore.getState().setIsInitializing(false);
 };
 
 // Initialize listener and cleanup on component mount/unmount

@@ -2,106 +2,109 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 export const CategoryPreviewContainer = styled.div`
-  display: grid;
-  grid-template-columns: 200px 1fr; /* Side title column */
-  margin-bottom: 100px;
-  padding: 0 4vw;
-  gap: 40px;
-
-  @media (max-width: 1024px) {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+  max-width: 1560px;
+  margin: 0 auto 36px;
+  padding: 0 32px;
 
   @media (max-width: 768px) {
-    margin-bottom: 60px;
-    padding: 0 20px;
+    margin-bottom: 28px;
+    padding: 0 16px;
   }
 `;
 
 export const TitleContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  position: sticky;
-  top: 120px; /* Sticks title while you scroll the 4 products */
-  height: fit-content;
-
-  @media (max-width: 1024px) {
-    position: static;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1px solid #000;
-    padding-bottom: 10px;
-    width: 100%;
-  }
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
 `;
 
 export const Title = styled(Link)`
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 8px;
-  font-weight: 200;
-  color: #000;
-  writing-mode: vertical-lr; /* Vertical text for high-end look */
-  transform: rotate(180deg);
-  margin-bottom: 20px;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+  transition: color 0.2s ease;
 
-  @media (max-width: 1024px) {
-    writing-mode: horizontal-tb;
-    transform: none;
-    letter-spacing: 4px;
-    margin-bottom: 0;
+  &:hover {
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.15rem;
+    letter-spacing: 2px;
   }
 `;
 
 export const ViewAllLink = styled(Link)`
-  font-size: 0.7rem;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #000;
-  position: relative;
-  padding-left: 30px;
+  letter-spacing: 1.8px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  transition: all 0.2s ease;
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 20px;
-    height: 1px;
-    background: black;
+  &::after {
+    content: "↗";
+    font-size: 0.85rem;
+    transition: transform 0.2s ease;
   }
 
   &:hover {
-    opacity: 0.6;
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    border-color: var(--text-primary);
+
+    &::after {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.68rem;
+    padding: 4px 8px;
   }
 `;
 
 export const Preview = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  gap: 16px;
+  height: 380px;
 
-  @media (max-width: 1200px) {
-    grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(3, 1fr);
+    height: 340px;
   }
 
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    height: auto;
   }
 `;
 
 export const IsLoading = styled.div`
   width: 100%;
-  height: 60vh;
+  height: 50vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 200;
-  letter-spacing: 5px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 3px;
   text-transform: uppercase;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
 `;
