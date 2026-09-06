@@ -290,6 +290,9 @@ const Navigation = () => {
       if (window.innerWidth > 768) return;
       if (!e.touches || e.touches.length !== 1) return;
 
+      // Disable swipe when user is zoomed in — let them pan freely
+      if (window.visualViewport && window.visualViewport.scale > 1) return;
+
       const target = e.target;
       if (
         target &&
