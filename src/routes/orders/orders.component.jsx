@@ -314,9 +314,6 @@ const Orders = () => {
                     </OrderItemsList>
 
                     <OrderSummaryFooter>
-                      <div className="session-info">
-                        Réf. paiement : {order.sessionId ? order.sessionId : order.id}
-                      </div>
                       <div className="final-total">
                         <span className="label">MONTANT TOTAL RÉGLÉ :</span>
                         <span className="value">{order.total} €</span>

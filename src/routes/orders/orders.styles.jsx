@@ -234,7 +234,8 @@ export const OrderToggleBtn = styled.div`
     width: 12px;
     height: 12px;
     transition: transform 0.25s ease;
-    transform: ${({ $isExpanded }) => ($isExpanded ? "rotate(180deg)" : "rotate(0deg)")};
+    transform: ${({ $isExpanded }) =>
+      $isExpanded ? "rotate(180deg)" : "rotate(0deg)"};
   }
 
   ${OrderCard}:hover & {
@@ -359,12 +360,6 @@ export const OrderSummaryFooter = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-
-  .session-info {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    font-family: monospace;
-  }
 
   .final-total {
     display: flex;
