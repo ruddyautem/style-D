@@ -12,10 +12,6 @@ export const MainContent = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
-
-  @media (max-width: 768px) {
-    padding-bottom: 64px;
-  }
 `;
 
 export const NavigationContainer = styled.nav`
@@ -618,6 +614,7 @@ export const UnifiedDrawerBackdrop = styled.div`
   opacity: ${({ $isOpen }) => ($isOpen ? 1 : 0)};
   visibility: ${({ $isOpen }) => ($isOpen ? "visible" : "hidden")};
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  will-change: opacity;
 
   @media (max-width: 768px) {
     bottom: 56px;
@@ -643,6 +640,7 @@ export const UnifiedDrawerContainer = styled.aside`
   pointer-events: ${({ $isOpen }) => ($isOpen ? "auto" : "none")};
   transform: ${({ $isOpen }) => ($isOpen ? "translateX(0)" : "translateX(100%)")};
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 
   @media (max-width: 768px) {
     bottom: 56px;

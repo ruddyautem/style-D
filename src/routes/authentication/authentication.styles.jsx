@@ -13,16 +13,16 @@ export const AuthentificationContainer = styled.div`
   @media (max-width: 850px) {
     flex-direction: column;
     align-items: center;
-    margin: 20px auto;
+    margin: 16px auto 8px;
   }
 
   @media (max-width: 480px) {
-    padding: 20px 14px;
+    padding: 16px 14px 6px;
     gap: 32px;
   }
 
   @media (max-width: 380px) {
-    padding: 16px 10px;
+    padding: 14px 10px 4px;
     gap: 28px;
   }
 `;

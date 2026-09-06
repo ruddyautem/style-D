@@ -26,9 +26,6 @@ export const CartDrawerView = ({ onClose }) => {
     currentUser ? navigate("/checkout") : navigate("/auth");
   };
 
-  const freeShippingThreshold = 150;
-  const progress = Math.min(100, Math.round((cartTotal / freeShippingThreshold) * 100));
-
   return (
     <>
       <DrawerHeader>
@@ -37,16 +34,7 @@ export const CartDrawerView = ({ onClose }) => {
       </DrawerHeader>
 
       <ShippingMeter>
-        {cartTotal >= freeShippingThreshold ? (
-          <span>✓ LIVRAISON MONDIALE EXPRESS OFFERTE</span>
-        ) : (
-          <span>
-            PLUS QUE {(freeShippingThreshold - cartTotal).toFixed(0)} € POUR LA LIVRAISON OFFERTE
-          </span>
-        )}
-        <div className="meter-bar">
-          <div className="fill" style={{ width: `${progress}%` }} />
-        </div>
+        <span>LIVRAISON EXPRESS OFFERTE</span>
       </ShippingMeter>
 
       <CartItemsList>

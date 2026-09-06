@@ -9,17 +9,17 @@ export const CheckoutPageContainer = styled.div`
 
   @media (max-width: 768px) {
     padding: 0 20px;
-    margin: 16px auto 40px;
+    margin: 16px auto 14px;
   }
 
   @media (max-width: 480px) {
     padding: 0 14px;
-    margin: 14px auto 32px;
+    margin: 14px auto 12px;
   }
 
   @media (max-width: 380px) {
     padding: 0 10px;
-    margin: 10px auto 24px;
+    margin: 10px auto 10px;
   }
 `;
 

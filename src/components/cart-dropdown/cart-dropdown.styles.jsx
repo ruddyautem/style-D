@@ -72,29 +72,16 @@ export const DrawerHeader = styled.div`
 `;
 
 export const ShippingMeter = styled.div`
-  padding: 12px 24px;
-  background-color: var(--bg-primary);
+  padding: 10px 24px;
+  background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--text-secondary);
-
-  .meter-bar {
-    width: 100%;
-    height: 3px;
-    background-color: var(--border-color);
-    margin-top: 8px;
-    position: relative;
-    overflow: hidden;
-
-    .fill {
-      height: 100%;
-      background-color: var(--text-primary);
-      transition: width 0.3s ease;
-    }
-  }
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
 `;
 
 export const CartItemsList = styled.div`

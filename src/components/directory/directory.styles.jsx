@@ -16,7 +16,7 @@ export const HomepageContainer = styled.div`
   }
 
   @media (max-width: 899px) {
-    padding: 16px;
+    padding: 16px 16px 10px;
     height: auto;
     overflow: visible;
   }

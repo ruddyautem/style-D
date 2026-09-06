@@ -245,7 +245,7 @@ const Checkout = () => {
               disabled={isLoading}
               style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "wait" : "pointer" }}
             >
-              {isLoading ? "REDIRECTION VERS STRIPE..." : `FINALISER SUR STRIPE • ${cartTotal} € ↗`}
+              {isLoading ? "REDIRECTION VERS PAIEMENT..." : "PAIEMENT"}
             </button>
           </RightSummarySection>
         </CheckoutLayout>

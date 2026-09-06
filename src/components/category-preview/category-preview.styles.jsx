@@ -7,8 +7,16 @@ export const CategoryPreviewContainer = styled.div`
   padding: 0 32px;
 
   @media (max-width: 768px) {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     padding: 0 16px;
+  }
+
+  &:last-child {
+    margin-bottom: 12px;
+
+    @media (max-width: 768px) {
+      margin-bottom: 6px;
+    }
   }
 `;
 

@@ -203,114 +203,25 @@ const Navigation = () => {
     setActiveDrawer(null);
   };
 
-  // Touch swipe gesture handling for bottom bar buttons & drawers
-  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const [dragState, setDragState] = useState(null); // { side: 'left' | 'right', offset: number, progress: number, animating: boolean } | null
+
+  const activeDrawerRef = useRef(activeDrawer);
+  activeDrawerRef.current = activeDrawer;
+
+  const lastActiveRightDrawerRef = useRef(lastActiveRightDrawer);
+  lastActiveRightDrawerRef.current = lastActiveRightDrawer;
+
   const isSwipingRef = useRef(false);
-
-  const handleTouchStart = (e) => {
-    const touch = e.touches[0];
-    touchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      time: Date.now(),
-    };
-    isSwipingRef.current = false;
-  };
-
-  const handleTouchMove = (e) => {
-    const touch = e.touches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
-      isSwipingRef.current = true;
-    }
-  };
-
-  // Left button gesture (Categories: slide right to open, slide left to close)
-  const handleLeftButtonTouchEnd = (e) => {
-    const touch = e.changedTouches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
-
-    if (isHorizontal && Math.abs(diffX) >= 25) {
-      if (diffX > 0) {
-        setActiveDrawer("menu");
-      } else if (diffX < 0 && activeDrawer === "menu") {
-        closeDrawer();
-      }
-      setTimeout(() => {
-        isSwipingRef.current = false;
-      }, 150);
-    } else {
-      isSwipingRef.current = false;
-    }
-  };
-
-  // Right button gesture (Cart: slide to open, slide right to close when open)
-  const handleCartButtonTouchEnd = (e) => {
-    const touch = e.changedTouches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
-
-    if (isHorizontal && Math.abs(diffX) >= 25) {
-      if (activeDrawer === "cart") {
-        if (diffX > 0) {
-          closeDrawer();
-        }
-      } else {
-        setActiveDrawer("cart");
-      }
-      setTimeout(() => {
-        isSwipingRef.current = false;
-      }, 150);
-    } else {
-      isSwipingRef.current = false;
-    }
-  };
-
-  // Account button gesture
-  const handleAccountButtonTouchEnd = (e) => {
-    const touch = e.changedTouches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    const isHorizontal = Math.abs(diffX) > Math.abs(diffY);
-
-    if (isHorizontal && Math.abs(diffX) >= 25) {
-      if (activeDrawer === "account") {
-        if (diffX > 0) {
-          closeDrawer();
-        }
-      } else {
-        setActiveDrawer("account");
-      }
-      setTimeout(() => {
-        isSwipingRef.current = false;
-      }, 150);
-    } else {
-      isSwipingRef.current = false;
-    }
-  };
-
-  // Drawer touch gestures (swipe left drawer to the left to close, swipe right drawer to the right to close)
-  const handleLeftDrawerTouchEnd = (e) => {
-    const touch = e.changedTouches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    if (Math.abs(diffX) > Math.abs(diffY) && diffX < -35) {
-      closeDrawer();
-    }
-  };
-
-  const handleRightDrawerTouchEnd = (e) => {
-    const touch = e.changedTouches[0];
-    const diffX = touch.clientX - touchStartRef.current.x;
-    const diffY = touch.clientY - touchStartRef.current.y;
-    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 35) {
-      closeDrawer();
-    }
-  };
+  const touchInfoRef = useRef({
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    direction: null,
+    initialDrawer: null,
+    side: null,
+    drawerWidth: 0,
+    isDragging: false,
+  });
 
   const handleCategoryClick = () => {
     if (isSwipingRef.current) return;
@@ -361,9 +272,9 @@ const Navigation = () => {
     };
   }, [activeDrawer]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll when drawer is open or actively dragged
   useEffect(() => {
-    if (activeDrawer !== null) {
+    if (activeDrawer !== null || (dragState && dragState.progress > 0.4)) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -371,14 +282,10 @@ const Navigation = () => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [activeDrawer]);
+  }, [activeDrawer, dragState?.progress]);
 
-  // Global tactile swipe anywhere on the screen for mobile (<= 768px)
+  // Real-time interactive tactile drawer swipe anywhere on screen (mobile <= 768px)
   useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-    let isHorizontalGesture = false;
-
     const onTouchStart = (e) => {
       if (window.innerWidth > 768) return;
       if (!e.touches || e.touches.length !== 1) return;
@@ -394,63 +301,263 @@ const Navigation = () => {
         return;
       }
 
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      isHorizontalGesture = false;
+      const drawerWidth = Math.min(420, window.innerWidth * 0.92);
+      const touch = e.touches[0];
+
+      touchInfoRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startTime: Date.now(),
+        direction: null,
+        initialDrawer: activeDrawerRef.current,
+        side: null,
+        drawerWidth,
+        isDragging: false,
+      };
     };
 
     const onTouchMove = (e) => {
       if (window.innerWidth > 768) return;
       if (!e.touches || e.touches.length !== 1) return;
 
-      const diffX = e.touches[0].clientX - startX;
-      const diffY = e.touches[0].clientY - startY;
+      const info = touchInfoRef.current;
+      if (!info.startTime) return;
 
-      if (Math.abs(diffX) > 15 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
-        isHorizontalGesture = true;
+      const touch = e.touches[0];
+      const diffX = touch.clientX - info.startX;
+      const diffY = touch.clientY - info.startY;
+
+      // Disambiguate vertical page scrolling vs horizontal drawer swipe
+      if (!info.direction) {
+        if (Math.abs(diffY) > 8 && Math.abs(diffY) >= Math.abs(diffX)) {
+          info.direction = "vertical";
+          return;
+        }
+        if (Math.abs(diffX) > 8 && Math.abs(diffX) > Math.abs(diffY)) {
+          info.direction = "horizontal";
+        } else {
+          return;
+        }
+      }
+
+      if (info.direction === "vertical") return;
+
+      // Horizontal gesture confirmed: lock gesture and prevent native page scroll
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+      info.isDragging = true;
+      isSwipingRef.current = true;
+
+      const { initialDrawer, drawerWidth } = info;
+
+      if (!initialDrawer) {
+        // Both drawers closed:
+        // Slide right -> reveals left drawer (menu / categories)
+        // Slide left -> reveals right drawer (cart)
+        if (diffX > 0) {
+          info.side = "left";
+          const clampedDiff = Math.min(drawerWidth, diffX);
+          const offset = -drawerWidth + clampedDiff;
+          const progress = Math.max(0, Math.min(1, clampedDiff / drawerWidth));
+          setDragState({
+            side: "left",
+            offset,
+            progress,
+            animating: false,
+          });
+        } else if (diffX < 0) {
+          info.side = "right";
+          setLastActiveRightDrawer("cart");
+          const clampedDiff = Math.min(drawerWidth, Math.abs(diffX));
+          const offset = drawerWidth - clampedDiff;
+          const progress = Math.max(0, Math.min(1, clampedDiff / drawerWidth));
+          setDragState({
+            side: "right",
+            offset,
+            progress,
+            animating: false,
+          });
+        }
+      } else if (initialDrawer === "menu") {
+        // Left drawer is open:
+        info.side = "left";
+        if (diffX < 0) {
+          // Dragging finger left pushes drawer back closed
+          const clampedDiff = Math.min(drawerWidth, Math.abs(diffX));
+          const offset = -clampedDiff;
+          const progress = Math.max(0, Math.min(1, 1 - clampedDiff / drawerWidth));
+          setDragState({
+            side: "left",
+            offset,
+            progress,
+            animating: false,
+          });
+        } else {
+          // Elastic resistance to the right
+          const offset = Math.min(25, diffX * 0.15);
+          setDragState({
+            side: "left",
+            offset,
+            progress: 1,
+            animating: false,
+          });
+        }
+      } else if (initialDrawer === "cart" || initialDrawer === "account") {
+        // Right drawer is open:
+        info.side = "right";
+        if (diffX > 0) {
+          // Dragging finger right pushes drawer back closed
+          const clampedDiff = Math.min(drawerWidth, diffX);
+          const offset = clampedDiff;
+          const progress = Math.max(0, Math.min(1, 1 - clampedDiff / drawerWidth));
+          setDragState({
+            side: "right",
+            offset,
+            progress,
+            animating: false,
+          });
+        } else {
+          // Elastic resistance to the left
+          const offset = -Math.min(25, Math.abs(diffX) * 0.15);
+          setDragState({
+            side: "right",
+            offset,
+            progress: 1,
+            animating: false,
+          });
+        }
       }
     };
 
     const onTouchEnd = (e) => {
       if (window.innerWidth > 768) return;
-      if (!isHorizontalGesture || !e.changedTouches || e.changedTouches.length !== 1) {
+      const info = touchInfoRef.current;
+      if (!info.startTime || !info.isDragging) {
+        touchInfoRef.current = { startTime: 0 };
         return;
       }
 
-      const diffX = e.changedTouches[0].clientX - startX;
-      const diffY = e.changedTouches[0].clientY - startY;
+      const touch = e.changedTouches ? e.changedTouches[0] : null;
+      const currentX = touch ? touch.clientX : info.startX;
+      const diffX = currentX - info.startX;
+      const duration = Math.max(1, Date.now() - info.startTime);
+      const velocity = Math.abs(diffX) / duration; // px/ms
+      const isFlick = velocity > 0.32 && Math.abs(diffX) > 25; // "coup sec"
+      const { initialDrawer, drawerWidth, side } = info;
 
-      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX > 0) {
-          // Slide vers la DROITE: ouvre les catégories (gauche) ou ferme le tiroir droit
-          if (activeDrawer === "cart" || activeDrawer === "account") {
-            closeDrawer();
-          } else if (activeDrawer !== "menu") {
-            setActiveDrawer("menu");
+      let finalDrawer = initialDrawer;
+      let targetOffset = 0;
+      let targetProgress = 1;
+
+      if (!initialDrawer) {
+        if (side === "left") {
+          const shouldOpen = isFlick && diffX > 0 ? true : diffX > drawerWidth * 0.28;
+          if (shouldOpen) {
+            finalDrawer = "menu";
+            targetOffset = 0;
+            targetProgress = 1;
+          } else {
+            finalDrawer = null;
+            targetOffset = -drawerWidth;
+            targetProgress = 0;
           }
+        } else if (side === "right") {
+          const shouldOpen = isFlick && diffX < 0 ? true : Math.abs(diffX) > drawerWidth * 0.28;
+          if (shouldOpen) {
+            finalDrawer = "cart";
+            targetOffset = 0;
+            targetProgress = 1;
+          } else {
+            finalDrawer = null;
+            targetOffset = drawerWidth;
+            targetProgress = 0;
+          }
+        }
+      } else if (initialDrawer === "menu") {
+        const shouldClose = isFlick && diffX < 0 ? true : diffX < -drawerWidth * 0.25;
+        if (shouldClose) {
+          finalDrawer = null;
+          targetOffset = -drawerWidth;
+          targetProgress = 0;
         } else {
-          // Slide vers la GAUCHE: ouvre le panier (droite) ou ferme les catégories
-          if (activeDrawer === "menu") {
-            closeDrawer();
-          } else if (activeDrawer !== "cart") {
-            setActiveDrawer("cart");
-          }
+          finalDrawer = "menu";
+          targetOffset = 0;
+          targetProgress = 1;
+        }
+      } else if (initialDrawer === "cart" || initialDrawer === "account") {
+        const shouldClose = isFlick && diffX > 0 ? true : diffX > drawerWidth * 0.25;
+        if (shouldClose) {
+          finalDrawer = null;
+          targetOffset = drawerWidth;
+          targetProgress = 0;
+        } else {
+          finalDrawer = initialDrawer;
+          targetOffset = 0;
+          targetProgress = 1;
         }
       }
 
-      isHorizontalGesture = false;
+      // Smoothly animate towards final state
+      setDragState({
+        side: side || (finalDrawer === "menu" ? "left" : "right"),
+        offset: targetOffset,
+        progress: targetProgress,
+        animating: true,
+      });
+
+      touchInfoRef.current = { startTime: 0 };
+
+      setTimeout(() => {
+        setActiveDrawer(finalDrawer);
+        setDragState(null);
+        setTimeout(() => {
+          isSwipingRef.current = false;
+        }, 120);
+      }, 280);
     };
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
     return () => {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [activeDrawer]);
+  }, []);
+
+  const backdropStyle = dragState
+    ? {
+        opacity: dragState.progress,
+        visibility: dragState.progress > 0.01 ? "visible" : "hidden",
+        transition: dragState.animating ? "opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s" : "none",
+        pointerEvents: dragState.progress > 0.1 ? "auto" : "none",
+      }
+    : undefined;
+
+  const leftDrawerStyle =
+    dragState?.side === "left"
+      ? {
+          transform: `translateX(${dragState.offset}px)`,
+          transition: dragState.animating ? "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)" : "none",
+          pointerEvents: "auto",
+          visibility: "visible",
+        }
+      : undefined;
+
+  const rightDrawerStyle =
+    dragState?.side === "right"
+      ? {
+          transform: `translateX(${dragState.offset}px)`,
+          transition: dragState.animating ? "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)" : "none",
+          pointerEvents: "auto",
+          visibility: "visible",
+        }
+      : undefined;
 
   // Sliding pill navigation state
   const [hoveredCatId, setHoveredCatId] = useState(null);
@@ -603,16 +710,18 @@ const Navigation = () => {
       </NavigationContainer>
 
       {/* Slide-over Backdrop */}
-      <UnifiedDrawerBackdrop $isOpen={activeDrawer !== null} onClick={closeDrawer} />
+      <UnifiedDrawerBackdrop
+        $isOpen={activeDrawer !== null || (dragState && dragState.progress > 0.02)}
+        style={backdropStyle}
+        onClick={closeDrawer}
+      />
 
       {/* Left Drawer Container: Categories Menu (Slides from the left on mobile) */}
       <UnifiedDrawerContainer
         $side="left"
-        $isOpen={activeDrawer === "menu"}
+        $isOpen={activeDrawer === "menu" || dragState?.side === "left"}
+        style={leftDrawerStyle}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleLeftDrawerTouchEnd}
       >
         <DrawerContentWrapper key="menu">
           <SideMenuHeader>
@@ -621,7 +730,6 @@ const Navigation = () => {
           </SideMenuHeader>
 
           <SideMenuBody>
-            <div className="menu-section-label">RAYONS & SÉRIES</div>
             <SideMenuCategoryItem to='/shop' onClick={closeDrawer}>
               <span className="item-title">TOUTE LA BOUTIQUE</span>
               <span className="arrow-indicator">→</span>
@@ -665,13 +773,12 @@ const Navigation = () => {
       {/* Right Drawer Container: Account & Cart (Slides from the right) */}
       <UnifiedDrawerContainer
         $side="right"
-        $isOpen={activeDrawer === "account" || activeDrawer === "cart"}
+        $isOpen={activeDrawer === "account" || activeDrawer === "cart" || dragState?.side === "right"}
+        style={rightDrawerStyle}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleRightDrawerTouchEnd}
       >
-        {(activeDrawer === "account" || (activeDrawer === null && lastActiveRightDrawer === "account")) && (
+        {(activeDrawer === "account" ||
+          (activeDrawer === null && lastActiveRightDrawer === "account" && dragState?.side !== "right")) && (
           <DrawerContentWrapper key="account">
             <AccountDrawerHeader>
               <h3>MON COMPTE</h3>
@@ -778,7 +885,8 @@ const Navigation = () => {
           </DrawerContentWrapper>
         )}
 
-        {(activeDrawer === "cart" || (activeDrawer === null && lastActiveRightDrawer === "cart")) && (
+        {(activeDrawer === "cart" ||
+          (activeDrawer === null && (lastActiveRightDrawer === "cart" || dragState?.side === "right"))) && (
           <DrawerContentWrapper key="cart">
             <CartDrawerView onClose={closeDrawer} />
           </DrawerContentWrapper>
@@ -790,11 +898,8 @@ const Navigation = () => {
         <MobileBottomLeft>
           {/* Bouton Hamburger Catégories */}
           <MobileBottomCategoryButton
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleLeftButtonTouchEnd}
             onClick={handleCategoryClick}
-            $isActive={activeDrawer === "menu"}
+            $isActive={activeDrawer === "menu" || (dragState?.side === "left" && dragState.progress > 0.4)}
             title="Catégories"
             aria-label="Catégories"
           >
@@ -805,9 +910,6 @@ const Navigation = () => {
         <MobileBottomRight>
           {/* Juste à côté le compte (juste l'icône, sans écriture ni point lumineux) */}
           <MobileBottomButton
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleAccountButtonTouchEnd}
             onClick={handleAccountClick}
             $isActive={activeDrawer === "account"}
             title="Mon compte"
@@ -818,11 +920,8 @@ const Navigation = () => {
 
           {/* En bas à droite le panier avec icône et nombre au milieu */}
           <MobileBottomCartIconButton
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleCartButtonTouchEnd}
             onClick={handleCartClick}
-            $isActive={activeDrawer === "cart"}
+            $isActive={activeDrawer === "cart" || (dragState?.side === "right" && dragState.progress > 0.4)}
             title="Panier"
             aria-label="Panier"
           >

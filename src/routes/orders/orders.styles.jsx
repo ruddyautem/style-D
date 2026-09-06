@@ -8,7 +8,7 @@ export const OrdersContainer = styled.div`
 
   @media (max-width: 768px) {
     padding: 0 16px;
-    margin: 16px auto 40px;
+    margin: 16px auto 10px;
   }
 `;
 

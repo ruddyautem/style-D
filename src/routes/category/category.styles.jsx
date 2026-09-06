@@ -6,7 +6,11 @@ export const CategoryPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding-bottom: 60px;
+  padding-bottom: 32px;
+
+  @media (max-width: 768px) {
+    padding-bottom: 4px;
+  }
 `;
 
 export const ShopPageWrapper = styled.div`
@@ -14,7 +18,11 @@ export const ShopPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding-bottom: 60px;
+  padding-bottom: 32px;
+
+  @media (max-width: 768px) {
+    padding-bottom: 4px;
+  }
 `;
 
 export const CategoryFilterBar = styled.div`
