@@ -44,11 +44,15 @@ const server = http.createServer(async (req, res) => {
   // 1. Stripe Checkout API Endpoint
   if (pathname === "/api/create-checkout-session" && req.method === "POST") {
     try {
-      const secretKey = process.env.STRIPE_SECRET_KEY;
+      const secretKey =
+        process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY;
       if (!secretKey) {
         res.writeHead(500, { "Content-Type": "application/json" });
         return res.end(
-          JSON.stringify({ error: "STRIPE_SECRET_KEY non configurée dans les variables d'environnement Dokploy." })
+          JSON.stringify({
+            error:
+              "STRIPE_SECRET_KEY (ou VITE_STRIPE_SECRET_KEY) non configurée dans l'environnement.",
+          })
         );
       }
 

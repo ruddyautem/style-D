@@ -20,6 +20,7 @@ Bienvenue sur le code source de **Style-D**, une boutique e-commerce streetwear 
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `/` (Accueil)           | La vitrine principale avec bannières défilantes, accès direct aux catégories et images optimisées.                     |
 | `/shop`                 | Le catalogue complet, avec navigation par catégorie (chapeaux, vestes, baskets, etc.).                                |
+| `/shop/:cat/:productId` | Page de détail de l'article avec sélecteur de taille (XS–XXL), réglage de quantité et invitation à la connexion.        |
 | `/auth`                 | Page de connexion et inscription (email/mot de passe ou compte Google via Firebase Auth).                             |
 | `/checkout`             | Récapitulatif du panier, sélection multiple, modale de confirmation, carte de test Stripe et affichage adapté mobile.  |
 | `/orders`               | Historique des commandes passées avec le statut et le détail des articles.                                             |
@@ -35,8 +36,9 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 
 ### ✨ Fonctionnalités clés
 
+- **Page produit dédiée & Tailles** : Page individuelle pour chaque article avec sélection de taille (XS à XXL), gestion de quantité, calcul du total en temps réel et rappel de connexion.
 - **Gestion du panier** : Sélection multiple d'articles avec cases à cocher, barre d'actions groupées et modale de confirmation pour supprimer.
-- **Navigation mobile & Gestes tactiles** : Menu catégories coulissant depuis la gauche, panier depuis la droite, et gestes de glissement tactiles (slide droite pour ouvrir les catégories, slide gauche pour le panier).
+- **Navigation mobile & Gestes tactiles** : Menu catégories coulissant depuis la gauche, panier depuis la droite, et gestes de glissement tactiles (désactivés lors du zoom pour une navigation fluide).
 - **Notifications (Toasts)** : Notifications interactives avec barre de temps animée, pause au survol et fermeture au clic.
 - **Carte de test Stripe** : Aperçu visuel d'une carte avec les numéros de test pour faciliter les essais de paiement, lisible sur tous les écrans.
 - **Adaptation mobile** : Interface soignée et bien centrée, y compris sur les petits écrans mobiles (< 380px) et formulaires sans débordement.
@@ -49,6 +51,7 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 | --------------------- | ------------------------------------ |
 | Framework             | React 19 + Vite                      |
 | Langage               | JavaScript / JSX                     |
+| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy     |
 | Package manager       | Bun                                  |
 | Styling               | Styled Components + SCSS             |
 | Notifications         | Sonner (toasts personnalisés)        |
@@ -68,6 +71,7 @@ style-d/
 │   ├── components/                  # Composants UI réutilisables
 │   │   ├── checkout-item/           # Lignes d'articles checkout avec steppers
 │   │   ├── confirm-delete-modal/    # Modale de confirmation de suppression
+│   │   ├── product-card/            # Cartes catalogue avec badge prix
 │   │   └── protected-route/         # Logique de protection des pages
 │   ├── libs/
 │   │   └── firebase/                # Initialisation de Firebase
@@ -78,6 +82,7 @@ style-d/
 │   │   ├── home/
 │   │   ├── navigation/
 │   │   ├── orders/
+│   │   ├── product/                 # Page de détail produit (tailles, quantité)
 │   │   ├── shop/
 │   │   └── success/
 │   ├── stores/                      # Stores Zustand (cart, user, categories)
@@ -87,6 +92,8 @@ style-d/
 │   └── index.jsx                    # Point de montage
 ├── .env.local                       # Variables d'environnement
 ├── package.json
+├── railpack.json                    # Configuration build Dokploy
+├── server.js                        # Serveur de production Node
 └── vite.config.js
 ```
 
@@ -118,6 +125,7 @@ Welcome to the source code of **Style-D**, a streetwear e-commerce web app built
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
 | `/` (Home)              | Main storefront with animated banners, direct category links, and optimized images.               |
 | `/shop`                 | Full catalog with category filtering (hats, jackets, sneakers, etc.).                              |
+| `/shop/:cat/:productId` | Product detail page with size selection (XS–XXL), quantity controls, and sign-in prompt for guest. |
 | `/auth`                 | Sign-in and registration page (email/password or Google sign-in via Firebase Auth).                |
 | `/checkout`             | Cart summary, multi-item checkbox selection, bulk delete modal, Stripe test card & mobile layout. |
 | `/orders`               | Order history with status and purchased item details.                                             |
@@ -133,8 +141,9 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 
 ### ✨ Key Features
 
+- **Dedicated Product Page & Sizing**: Individual product view with size selector (XS to XXL), quantity controls, live subtotal computation, and sign-in prompts.
 - **Cart Management**: Multi-item selection with checkboxes, bulk action toolbar, and delete confirmation modal.
-- **Mobile Navigation & Swipe Gestures**: Left-sliding categories menu, right-sliding cart, and touch swipe gestures (swipe right for categories, swipe left for cart).
+- **Mobile Navigation & Swipe Gestures**: Left-sliding categories menu, right-sliding cart, and touch swipe gestures (disabled while zoomed in for smooth panning).
 - **Toast Notifications**: Interactive toasts with animated progress timer, hover pause, and click to dismiss.
 - **Stripe Test Card**: Visual card preview displaying test credentials for easy checkout testing across all screen sizes.
 - **Mobile Responsive**: Clean and centered layout tuned for mobile devices, including smaller viewports (< 380px) and overflow-free forms.
@@ -143,16 +152,17 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 
 ### 🛠 Tech stack
 
-| Category         | Technologies                         |
-| ---------------- | ------------------------------------ |
-| Framework        | React 19 + Vite                      |
-| Language         | JavaScript / JSX                     |
-| Package manager  | Bun                                  |
-| Styling          | Styled Components + SCSS             |
-| Notifications    | Sonner (custom toasts)               |
-| Auth & Database  | Firebase (Auth, Firestore)           |
-| Payment          | Stripe API                           |
-| State Management | Zustand                              |
+| Category              | Technologies                         |
+| --------------------- | ------------------------------------ |
+| Framework             | React 19 + Vite                      |
+| Language              | JavaScript / JSX                     |
+| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy     |
+| Package manager       | Bun                                  |
+| Styling               | Styled Components + SCSS             |
+| Notifications         | Sonner (custom toasts)               |
+| Auth & Database       | Firebase (Auth, Firestore)           |
+| Payment               | Stripe API                           |
+| State Management      | Zustand                              |
 
 ### 📁 Project structure
 
@@ -166,6 +176,7 @@ style-d/
 │   ├── components/                  # Reusable UI components
 │   │   ├── checkout-item/           # Checkout product rows & steppers
 │   │   ├── confirm-delete-modal/    # Deletion confirmation modal
+│   │   ├── product-card/            # Catalog cards with price badge
 │   │   └── protected-route/         # Page protection logic
 │   ├── libs/
 │   │   └── firebase/                # Firebase initialization
@@ -176,6 +187,7 @@ style-d/
 │   │   ├── home/
 │   │   ├── navigation/
 │   │   ├── orders/
+│   │   ├── product/                 # Product detail page (sizes, quantity)
 │   │   ├── shop/
 │   │   └── success/
 │   ├── stores/                      # Zustand stores (cart, user, categories)
@@ -185,6 +197,8 @@ style-d/
 │   └── index.jsx                    # Mount point
 ├── .env.local                       # Environment variables
 ├── package.json
+├── railpack.json                    # Dokploy build config
+├── server.js                        # Node production server
 └── vite.config.js
 ```
 

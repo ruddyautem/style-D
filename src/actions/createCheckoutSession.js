@@ -20,8 +20,17 @@ export const createCheckoutSession = async (cartItems) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Erreur serveur: ${response.status}`);
+      let errorMessage = `Erreur serveur (${response.status})`;
+      try {
+        const text = await response.text();
+        if (text) {
+          const parsed = JSON.parse(text);
+          if (parsed?.error) errorMessage = parsed.error;
+        }
+      } catch {
+        // Non-JSON response
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
