@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "../../stores/languageStore";
 import {
   ProductCardContainer,
   Footer,
@@ -7,9 +8,11 @@ import {
 } from "./product-card.styles.jsx";
 
 const ProductCard = ({ product }) => {
-  const { name, price, imageUrl } = product;
+  const { price, imageUrl } = product;
   const navigate = useNavigate();
   const { category } = useParams();
+  const { getProductName } = useTranslation();
+  const displayName = getProductName(product);
 
   const handleCardClick = () => {
     if (category) {
@@ -22,12 +25,12 @@ const ProductCard = ({ product }) => {
       <div className="img-container">
         <img
           src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=600&output=webp`}
-          alt={name}
+          alt={displayName}
           loading="lazy"
         />
       </div>
       <Footer>
-        <Name>{name}</Name>
+        <Name>{displayName}</Name>
         <Price>{price} €</Price>
       </Footer>
     </ProductCardContainer>

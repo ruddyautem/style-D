@@ -16,15 +16,15 @@ Bienvenue sur le code source de **Style-D**, une boutique e-commerce streetwear 
 
 ### 📑 Les pages
 
-| Route                   | Ce qu'on y trouve                                                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `/` (Accueil)           | La vitrine principale avec bannières défilantes, accès direct aux catégories et images optimisées.                     |
+| Route                   | Ce qu'on y trouve                                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `/` (Accueil)           | La vitrine principale avec bannières défilantes, accès direct aux catégories et images optimisées.                    |
 | `/shop`                 | Le catalogue complet, avec navigation par catégorie (chapeaux, vestes, baskets, etc.).                                |
-| `/shop/:cat/:productId` | Page de détail de l'article avec sélecteur de taille (XS–XXL), réglage de quantité et invitation à la connexion.        |
+| `/shop/:cat/:productId` | Page de détail de l'article avec sélecteur de taille (XS–XXL), réglage de quantité et invitation à la connexion.      |
 | `/auth`                 | Page de connexion et inscription (email/mot de passe ou compte Google via Firebase Auth).                             |
-| `/checkout`             | Récapitulatif du panier, sélection multiple, modale de confirmation, carte de test Stripe et affichage adapté mobile.  |
-| `/orders`               | Historique des commandes passées avec le statut et le détail des articles.                                             |
-| `/success` & `/failure` | Pages de retour après paiement Stripe (confirmation et validation du panier).                                          |
+| `/checkout`             | Récapitulatif du panier, sélection multiple, modale de confirmation, carte de test Stripe et affichage adapté mobile. |
+| `/orders`               | Historique des commandes passées avec le statut et le détail des articles.                                            |
+| `/success` & `/failure` | Pages de retour après paiement Stripe (confirmation et validation du panier).                                         |
 
 ### 🌍 L'état global avec Zustand
 
@@ -33,10 +33,12 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 - `cartStore` : Ajout/retrait d'articles, sélection multiple, calcul du total, modale de confirmation et synchronisation.
 - `userStore` : Gestion de l'utilisateur connecté via Firebase Auth.
 - `categoriesStore` : Récupération et mise en cache du catalogue Firestore.
+- `languageStore` : Gestion multilingue (Français / Anglais), persistance automatique en `localStorage` et hook `useTranslation()`.
 
 ### ✨ Fonctionnalités clés
 
-- **Page produit dédiée & Tailles** : Page individuelle pour chaque article avec sélection de taille (XS à XXL), gestion de quantité, calcul du total en temps réel et rappel de connexion.
+- **Support bilingue & Switcher de langue (FR | EN)** : Application entièrement bilingue (Français et Anglais) avec détection automatique selon la langue du navigateur (FR pour les francophones, EN par défaut pour l'international), mémorisation en `localStorage`, traduction complète des articles et catégories bilingues.
+- **Page produit dédiée & Tailles** : Page individuelle pour chaque article avec fil d'Ariane et catégorie traduits, sélection de taille (XS à XXL), gestion de quantité, calcul du total en temps réel et rappel de connexion.
 - **Défilement automatique (ScrollToTop)** : Remontée instantanée en haut de page à chaque changement de catégorie, de produit ou de route, pour un confort de navigation optimal sur mobile.
 - **Gestion du panier** : Sélection multiple d'articles avec cases à cocher, barre d'actions groupées et modale de confirmation pour supprimer.
 - **Navigation mobile & Gestes tactiles** : Menu catégories coulissant depuis la gauche, panier depuis la droite, et gestes de glissement tactiles (désactivés lors du zoom pour une navigation fluide).
@@ -48,17 +50,17 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 
 ### 🛠 Stack technique
 
-| Catégorie             | Technologies                         |
-| --------------------- | ------------------------------------ |
-| Framework             | React 19 + Vite                      |
-| Langage               | JavaScript / JSX                     |
-| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy     |
-| Package manager       | Bun                                  |
-| Styling               | Styled Components + SCSS             |
-| Notifications         | Sonner (toasts personnalisés)        |
-| Authentification & DB | Firebase (Auth, Firestore)           |
-| Paiement              | Stripe API                           |
-| State Management      | Zustand                              |
+| Catégorie             | Technologies                     |
+| --------------------- | -------------------------------- |
+| Framework             | React 19 + Vite                  |
+| Langage               | JavaScript / JSX                 |
+| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy |
+| Package manager       | Bun                              |
+| Styling               | Styled Components + SCSS         |
+| Notifications         | Sonner (toasts personnalisés)    |
+| Authentification & DB | Firebase (Auth, Firestore)       |
+| Paiement              | Stripe API                       |
+| State Management      | Zustand                          |
 
 ### 📁 Structure du projet
 
@@ -72,11 +74,13 @@ style-d/
 │   ├── components/                  # Composants UI réutilisables
 │   │   ├── checkout-item/           # Lignes d'articles checkout avec steppers
 │   │   ├── confirm-delete-modal/    # Modale de confirmation de suppression
+│   │   ├── language-switcher/       # Sélecteur de langue bilingue (FR | EN)
 │   │   ├── product-card/            # Cartes catalogue avec badge prix
 │   │   ├── protected-route/         # Logique de protection des pages
 │   │   └── scroll-to-top/           # Remontée automatique en haut de page
 │   ├── libs/
 │   │   └── firebase/                # Initialisation de Firebase
+│   ├── locales/                     # Dictionnaires de traduction (fr.js, en.js)
 │   ├── routes/                      # Vues principales
 │   │   ├── authentication/
 │   │   ├── checkout/
@@ -87,7 +91,7 @@ style-d/
 │   │   ├── product/                 # Page de détail produit (tailles, quantité)
 │   │   ├── shop/
 │   │   └── success/
-│   ├── stores/                      # Stores Zustand (cart, user, categories)
+│   ├── stores/                      # Stores Zustand (cart, user, categories, language)
 │   ├── utils/
 │   │   └── firestoreInteractions.js # Appels à la base de données
 │   ├── App.jsx                      # Le routeur
@@ -123,15 +127,15 @@ Welcome to the source code of **Style-D**, a streetwear e-commerce web app built
 
 ### 📑 Pages
 
-| Route                   | What's there                                                                                      |
-| ----------------------- | ------------------------------------------------------------------------------------------------- |
-| `/` (Home)              | Main storefront with animated banners, direct category links, and optimized images.               |
+| Route                   | What's there                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| `/` (Home)              | Main storefront with animated banners, direct category links, and optimized images.                |
 | `/shop`                 | Full catalog with category filtering (hats, jackets, sneakers, etc.).                              |
 | `/shop/:cat/:productId` | Product detail page with size selection (XS–XXL), quantity controls, and sign-in prompt for guest. |
 | `/auth`                 | Sign-in and registration page (email/password or Google sign-in via Firebase Auth).                |
-| `/checkout`             | Cart summary, multi-item checkbox selection, bulk delete modal, Stripe test card & mobile layout. |
-| `/orders`               | Order history with status and purchased item details.                                             |
-| `/success` & `/failure` | Post-payment return pages confirming orders and resetting cart state.                             |
+| `/checkout`             | Cart summary, multi-item checkbox selection, bulk delete modal, Stripe test card & mobile layout.  |
+| `/orders`               | Order history with status and purchased item details.                                              |
+| `/success` & `/failure` | Post-payment return pages confirming orders and resetting cart state.                              |
 
 ### 🌍 Global State with Zustand
 
@@ -140,10 +144,12 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 - `cartStore`: Adding/removing items, multi-selection, total calculations, delete confirmation modal, and sync.
 - `userStore`: Manages auth state from Firebase.
 - `categoriesStore`: Loads and caches the product catalog from Firestore.
+- `languageStore`: Multilingual management (French / English) with automatic `localStorage` persistence and lightweight `useTranslation()` hook.
 
 ### ✨ Key Features
 
-- **Dedicated Product Page & Sizing**: Individual product view with size selector (XS to XXL), quantity controls, live subtotal computation, and sign-in prompts.
+- **Bilingual Support & Language Switcher (FR | EN)**: Full French and English language support across the entire app with browser locale auto-detection (FR for French speakers, EN for international visitors), `localStorage` persistence, complete catalog item translations, and localized category names.
+- **Dedicated Product Page & Sizing**: Individual product view with translated breadcrumb and category badges, size selector (XS to XXL), quantity controls, live subtotal computation, and sign-in prompts.
 - **Scroll to Top**: Automatic instant scroll to top on every route, category, or product navigation for an effortless mobile experience.
 - **Cart Management**: Multi-item selection with checkboxes, bulk action toolbar, and delete confirmation modal.
 - **Mobile Navigation & Swipe Gestures**: Left-sliding categories menu, right-sliding cart, and touch swipe gestures (disabled while zoomed in for smooth panning).
@@ -155,17 +161,17 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 
 ### 🛠 Tech stack
 
-| Category              | Technologies                         |
-| --------------------- | ------------------------------------ |
-| Framework             | React 19 + Vite                      |
-| Language              | JavaScript / JSX                     |
-| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy     |
-| Package manager       | Bun                                  |
-| Styling               | Styled Components + SCSS             |
-| Notifications         | Sonner (custom toasts)               |
-| Auth & Database       | Firebase (Auth, Firestore)           |
-| Payment               | Stripe API                           |
-| State Management      | Zustand                              |
+| Category              | Technologies                     |
+| --------------------- | -------------------------------- |
+| Framework             | React 19 + Vite                  |
+| Language              | JavaScript / JSX                 |
+| Backend / Prod Server | Node.js (Express/HTTP) + Dokploy |
+| Package manager       | Bun                              |
+| Styling               | Styled Components + SCSS         |
+| Notifications         | Sonner (custom toasts)           |
+| Auth & Database       | Firebase (Auth, Firestore)       |
+| Payment               | Stripe API                       |
+| State Management      | Zustand                          |
 
 ### 📁 Project structure
 
@@ -179,11 +185,13 @@ style-d/
 │   ├── components/                  # Reusable UI components
 │   │   ├── checkout-item/           # Checkout product rows & steppers
 │   │   ├── confirm-delete-modal/    # Deletion confirmation modal
+│   │   ├── language-switcher/       # Bilingual language toggle (FR | EN)
 │   │   ├── product-card/            # Catalog cards with price badge
 │   │   ├── protected-route/         # Page protection logic
 │   │   └── scroll-to-top/           # Automatic scroll restoration
 │   ├── libs/
 │   │   └── firebase/                # Firebase initialization
+│   ├── locales/                     # Translation dictionaries (fr.js, en.js)
 │   ├── routes/                      # Main views
 │   │   ├── authentication/
 │   │   ├── checkout/
@@ -194,7 +202,7 @@ style-d/
 │   │   ├── product/                 # Product detail page (sizes, quantity)
 │   │   ├── shop/
 │   │   └── success/
-│   ├── stores/                      # Zustand stores (cart, user, categories)
+│   ├── stores/                      # Zustand stores (cart, user, categories, language)
 │   ├── utils/
 │   │   └── firestoreInteractions.js # Database calls
 │   ├── App.jsx                      # Router

@@ -1,19 +1,20 @@
 import { Container, Title } from "./Failure.styles";
 import { useNavigate } from "react-router-dom";
-
+import { useTranslation } from "../../stores/languageStore";
 import Button from "../../components/button/button.component";
 
-const Success = () => {
+const Failure = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <Container>
-      <Title>Une erreur s'est produite lors du paiement.</Title>
+      <Title>{t("failure.title")}</Title>
       <Button buttonType='base' onClick={() => navigate("/checkout")}>
-        Payer votre commande
+        {t("failure.retryBtn")}
       </Button>
     </Container>
   );
 };
 
-export default Success;
+export default Failure;

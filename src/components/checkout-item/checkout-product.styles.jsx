@@ -116,17 +116,24 @@ export const ItemBody = styled.div`
       flex: 1;
 
       .name {
-        font-size: 0.86rem;
+        font-size: 0.84rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
         color: var(--text-primary);
-        line-height: 1.3;
+        line-height: 1.25;
         word-break: break-word;
 
+        @media (max-width: 480px) {
+          font-size: 0.74rem;
+          line-height: 1.2;
+          letter-spacing: 0.2px;
+        }
+
         @media (max-width: 380px) {
-          font-size: 0.78rem;
-          letter-spacing: 0.3px;
+          font-size: 0.68rem;
+          line-height: 1.15;
+          letter-spacing: 0;
         }
       }
 

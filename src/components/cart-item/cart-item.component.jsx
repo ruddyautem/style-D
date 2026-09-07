@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import useCartStore from "../../stores/cartStore";
+import { useTranslation } from "../../stores/languageStore";
 import {
   CartItemContainer,
   ImageContainer,
@@ -9,7 +10,10 @@ import {
 } from "./cart-item.styles.jsx";
 
 const CartItem = ({ cartItem }) => {
-  const { name, imageUrl, price, quantity } = cartItem;
+  const { imageUrl, price, quantity } = cartItem;
+  const { t, currentLanguage, getProductName } = useTranslation();
+  const displayName = getProductName(cartItem);
+
   const {
     handleProductQuantity,
     setProductQuantity,
@@ -19,7 +23,8 @@ const CartItem = ({ cartItem }) => {
   const handleIncrement = (e) => {
     e.stopPropagation();
     handleProductQuantity(cartItem, "add");
-    toast.success(`Quantité mise à jour : ${quantity + 1} × ${name}`);
+    const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+    toast.success(`${msg} : ${quantity + 1} × ${displayName}`);
   };
 
   const handleDecrement = (e) => {
@@ -28,7 +33,8 @@ const CartItem = ({ cartItem }) => {
       openDeleteConfirm(cartItem, "remove");
     } else {
       handleProductQuantity(cartItem, "remove");
-      toast.success(`Quantité mise à jour : ${quantity - 1} × ${name}`);
+      const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+      toast.success(`${msg} : ${quantity - 1} × ${displayName}`);
     }
   };
 
@@ -36,7 +42,8 @@ const CartItem = ({ cartItem }) => {
     e.stopPropagation();
     const val = parseInt(e.target.value, 10);
     setProductQuantity(cartItem, val);
-    toast.success(`Quantité mise à jour : ${val} × ${name}`);
+    const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+    toast.success(`${msg} : ${val} × ${displayName}`);
   };
 
   const handleRemove = (e) => {
@@ -49,14 +56,14 @@ const CartItem = ({ cartItem }) => {
       <ImageContainer>
         <img
           src={`https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=200&output=webp`}
-          alt={name}
+          alt={displayName}
         />
       </ImageContainer>
 
       <ItemDetails>
         <div className="top-row">
-          <span className="name">{name}</span>
-          <RemoveBtn onClick={handleRemove} title="Supprimer" aria-label="Supprimer">
+          <span className="name">{displayName}</span>
+          <RemoveBtn onClick={handleRemove} title={t("modal.close")} aria-label={t("modal.close")}>
             <svg
               width="13"
               height="13"
@@ -75,20 +82,20 @@ const CartItem = ({ cartItem }) => {
 
         <div className="bottom-row">
           <QuantityControl>
-            <button onClick={handleDecrement} title="Retirer 1">-</button>
+            <button onClick={handleDecrement} title={currentLanguage === "en" ? "Remove 1" : "Retirer 1"}>-</button>
             <select
               value={quantity}
               onChange={handleSelectQuantity}
-              title="Choisir la quantité"
+              title={currentLanguage === "en" ? "Select quantity" : "Choisir la quantité"}
               className="qty-select"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((num) => (
                 <option key={num} value={num}>
-                  Qté: {num}
+                  {t("cart.qty")}: {num}
                 </option>
               ))}
             </select>
-            <button onClick={handleIncrement} title="Ajouter 1">+</button>
+            <button onClick={handleIncrement} title={currentLanguage === "en" ? "Add 1" : "Ajouter 1"}>+</button>
           </QuantityControl>
 
           <span className="price">{quantity * price} €</span>

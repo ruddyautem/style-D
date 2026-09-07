@@ -2,12 +2,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { Container, Title, Message, OrderNumberSection, OrderNumberContainer, ActionsContainer } from "./Success.styles";
 import { useNavigate, useLocation } from "react-router-dom";
 import useCartStore from "../../stores/cartStore";
+import { useTranslation } from "../../stores/languageStore";
 import Button from "../../components/button/button.component";
 import { fetchOrderFromFirestore } from "../../utils/firestoreInteractions";
 
 const Success = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { userId, cartProducts, saveOrder, resetLocalCart } = useCartStore();
   const [orderId, setOrderId] = useState(null);
   const [error, setError] = useState(null);
@@ -80,10 +82,10 @@ const Success = () => {
   if (error) {
     return (
       <Container>
-        <Title>Erreur</Title>
+        <Title>{t("success.errorTitle")}</Title>
         <Message>{error}</Message>
         <Button buttonType='base' onClick={() => navigate("/")}>
-          Retourner à l'accueil
+          {t("success.returnHomeBtn")}
         </Button>
       </Container>
     );
@@ -92,7 +94,7 @@ const Success = () => {
   if (!orderId)
     return (
       <Container>
-        <Title>TRAITEMENT DE VOTRE PAIEMENT EN COURS...</Title>
+        <Title>{t("success.processing")}</Title>
       </Container>
     );
 
@@ -100,22 +102,22 @@ const Success = () => {
 
   return (
     <Container>
-      <Title>Merci pour votre commande!</Title>
+      <Title>{t("success.title")}</Title>
       
       <OrderNumberSection>
-        <span className="order-number-label">NUMÉRO DE COMMANDE</span>
+        <span className="order-number-label">{t("success.orderNumberLabel")}</span>
         <OrderNumberContainer>
           <span className="number">{formattedOrderNumber}</span>
         </OrderNumberContainer>
       </OrderNumberSection>
 
-      <Message>Elle est bien prise en compte et sera bientôt traitée.</Message>
+      <Message>{t("success.message")}</Message>
       <ActionsContainer>
         <Button buttonType='base' onClick={() => navigate("/orders")}>
-          Voir votre commande
+          {t("success.viewOrderBtn")}
         </Button>
         <Button buttonType='inverted' onClick={() => navigate("/")}>
-          Retourner à l'accueil
+          {t("success.returnHomeBtn")}
         </Button>
       </ActionsContainer>
     </Container>

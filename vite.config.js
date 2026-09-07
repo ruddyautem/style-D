@@ -33,7 +33,7 @@ function stripeDevServerPlugin() {
             for await (const chunk of req) {
               body += chunk;
             }
-            const { cartItems, userEmail, userName, origin } = JSON.parse(body || "{}");
+            const { cartItems, userEmail, userName, origin, locale } = JSON.parse(body || "{}");
 
             if (!cartItems || !cartItems.length) {
               res.statusCode = 400;
@@ -69,7 +69,7 @@ function stripeDevServerPlugin() {
               customer: customer.id,
               success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
               cancel_url: `${baseUrl}/failure`,
-              locale: "fr",
+              locale: locale === "en" ? "en" : "fr",
             });
 
             res.statusCode = 200;

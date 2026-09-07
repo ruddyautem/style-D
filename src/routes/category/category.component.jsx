@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ProductCard from "../../components/product-card/product-card.component";
 import useCategoriesStore from "../../stores/categoriesStore";
+import { useTranslation } from "../../stores/languageStore";
 import {
   CategoryPageWrapper,
   CategoryContainer,
@@ -11,6 +12,7 @@ import { IsLoading } from "../../components/category-preview/category-preview.st
 const Category = () => {
   const { category } = useParams();
   const { categoriesMap, isLoading, fetchCategories } = useCategoriesStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (Object.keys(categoriesMap).length === 0) {
@@ -24,7 +26,7 @@ const Category = () => {
     <CategoryPageWrapper>
       {isLoading ? (
         <IsLoading style={{ textAlign: "center", width: "100%" }}>
-          Chargement de la collection...
+          {t("categories.loading")}
         </IsLoading>
       ) : (
         <CategoryContainer>
@@ -33,7 +35,7 @@ const Category = () => {
           ))}
           {products.length === 0 && (
             <p style={{ textAlign: "center", width: "100%" }}>
-              Aucun article disponible.
+              {t("categories.empty")}
             </p>
           )}
         </CategoryContainer>

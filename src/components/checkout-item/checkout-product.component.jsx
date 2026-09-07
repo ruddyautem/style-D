@@ -7,8 +7,12 @@ import {
   DeleteButton,
 } from "./checkout-product.styles.jsx";
 import useCartStore from "../../stores/cartStore";
+import { useTranslation } from "../../stores/languageStore";
 
 const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
+  const { t, currentLanguage, getProductName } = useTranslation();
+  const displayName = getProductName(product);
+
   const {
     handleProductQuantity,
     setProductQuantity,
@@ -17,7 +21,8 @@ const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
 
   const handleIncrement = () => {
     handleProductQuantity(product, "add");
-    toast.success(`Quantité mise à jour : ${product.quantity + 1} × ${product.name}`);
+    const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+    toast.success(`${msg} : ${product.quantity + 1} × ${displayName}`);
   };
 
   const handleDecrement = () => {
@@ -25,14 +30,16 @@ const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
       openDeleteConfirm(product, "remove");
     } else {
       handleProductQuantity(product, "remove");
-      toast.success(`Quantité mise à jour : ${product.quantity - 1} × ${product.name}`);
+      const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+      toast.success(`${msg} : ${product.quantity - 1} × ${displayName}`);
     }
   };
 
   const handleSelectQuantity = (e) => {
     const val = parseInt(e.target.value, 10);
     setProductQuantity(product, val);
-    toast.success(`Quantité mise à jour : ${val} × ${product.name}`);
+    const msg = currentLanguage === "en" ? "Quantity updated" : "Quantité mise à jour";
+    toast.success(`${msg} : ${val} × ${displayName}`);
   };
 
   const handleRemove = () => {
@@ -47,7 +54,7 @@ const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
             type="checkbox"
             checked={!!isSelected}
             onChange={() => onToggleSelect(product.id)}
-            aria-label={`Sélectionner ${product.name}`}
+            aria-label={`${t("checkout.deleteItem")} ${displayName}`}
           />
         </CheckboxContainer>
       )}
@@ -55,21 +62,21 @@ const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
       <div className="thumb-box">
         <img
           src={`https://wsrv.nl/?url=${encodeURIComponent(product.imageUrl)}&w=300&output=webp`}
-          alt={product.name}
+          alt={displayName}
         />
       </div>
 
       <ItemBody>
         <div className="top-row">
           <div className="info">
-            <span className="name">{product.name}</span>
-            <span className="unit-price">{product.price} € / unité</span>
+            <span className="name">{displayName}</span>
+            <span className="unit-price">{product.price} € {currentLanguage === "en" ? "/ unit" : "/ unité"}</span>
           </div>
 
           <DeleteButton
             onClick={handleRemove}
-            title="Supprimer l'article"
-            aria-label="Supprimer l'article"
+            title={t("checkout.deleteItem")}
+            aria-label={t("checkout.deleteItem")}
           >
             <svg
               width="14"
@@ -89,20 +96,20 @@ const CheckoutProduct = ({ product, isSelected, onToggleSelect }) => {
 
         <div className="bottom-row">
           <Stepper>
-            <button onClick={handleDecrement} title="Retirer 1">-</button>
+            <button onClick={handleDecrement} title={currentLanguage === "en" ? "Remove 1" : "Retirer 1"}>-</button>
             <select
               value={product.quantity}
               onChange={handleSelectQuantity}
               className="qty-select"
-              title="Choisir la quantité"
+              title={currentLanguage === "en" ? "Select quantity" : "Choisir la quantité"}
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((num) => (
                 <option key={num} value={num}>
-                  Qté: {num}
+                  {t("cart.qty")}: {num}
                 </option>
               ))}
             </select>
-            <button onClick={handleIncrement} title="Ajouter 1">+</button>
+            <button onClick={handleIncrement} title={currentLanguage === "en" ? "Add 1" : "Ajouter 1"}>+</button>
           </Stepper>
 
           <span className="total-price">{product.quantity * product.price} €</span>

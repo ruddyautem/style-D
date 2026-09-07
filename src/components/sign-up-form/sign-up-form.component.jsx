@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "../../stores/languageStore";
 
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button.component";
@@ -19,6 +20,7 @@ const defaultFormFields = {
 };
 
 const SignUpForm = () => {
+  const { t } = useTranslation();
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { displayName, email, password, confirmPassword } = formFields;
 
@@ -30,7 +32,7 @@ const SignUpForm = () => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas.");
+      toast.error(t("auth.passwordMismatchToast"));
       return;
     }
 
@@ -42,16 +44,16 @@ const SignUpForm = () => {
 
       await createUserDocumentFromAuth(user, { displayName });
 
-      toast.success(`Compte créé avec succès ! Bienvenue chez STYLE — D, ${displayName || user.email}.`);
+      toast.success(t("auth.signUpSuccessToast", { name: displayName || user.email }));
       resetFormFields();
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
-        toast.error("Cette adresse email est déjà utilisée.");
+        toast.error(t("auth.emailInUseToast"));
       } else if (error.code === "auth/weak-password") {
-        toast.error("Le mot de passe doit comporter au moins 6 caractères.");
+        toast.error(t("auth.weakPasswordToast"));
       } else {
         console.error("user creation encountered an error", error);
-        toast.error("Erreur lors de la création du compte.");
+        toast.error(t("auth.signUpErrorToast"));
       }
     }
   };
@@ -64,11 +66,11 @@ const SignUpForm = () => {
 
   return (
     <SignUpContainer>
-      <h2>Vous N'avez Pas Encore De Compte?</h2>
-      <span>Créez Un Compte Avec Votre Email Et Votre Mot De Passe</span>
+      <h2>{t("auth.signUpTitle")}</h2>
+      <span>{t("auth.signUpSubtitle")}</span>
       <form onSubmit={handleSubmit}>
         <FormInput
-          label='Pseudo Affiché'
+          label={t("auth.displayNameLabel")}
           type='text'
           required
           onChange={handleChange}
@@ -77,7 +79,7 @@ const SignUpForm = () => {
         />
 
         <FormInput
-          label='Email'
+          label={t("auth.emailLabel")}
           type='email'
           required
           onChange={handleChange}
@@ -86,7 +88,7 @@ const SignUpForm = () => {
         />
 
         <FormInput
-          label='Mot de Passe'
+          label={t("auth.passwordLabel")}
           type='password'
           required
           onChange={handleChange}
@@ -95,14 +97,14 @@ const SignUpForm = () => {
         />
 
         <FormInput
-          label='Confirmer Votre Mot De Passe'
+          label={t("auth.confirmPasswordLabel")}
           type='password'
           required
           onChange={handleChange}
           name='confirmPassword'
           value={confirmPassword}
         />
-        <Button type='submit'>S'inscrire</Button>
+        <Button type='submit'>{t("auth.signUpBtn")}</Button>
       </form>
     </SignUpContainer>
   );

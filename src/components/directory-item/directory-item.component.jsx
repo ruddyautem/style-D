@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../stores/languageStore";
 import {
   DirectoryItemContainer,
   BackgroundImage,
@@ -9,6 +10,7 @@ import {
 const DirectoryItem = ({ category }) => {
   const { imageUrl, title, subtitle, tag, route } = category;
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const onNavigateHandler = () => navigate(route);
 
@@ -21,7 +23,7 @@ const DirectoryItem = ({ category }) => {
           <h2>{title}</h2>
           {subtitle && <span className="sub">{subtitle}</span>}
         </div>
-        <p>DÉCOUVRIR</p>
+        <p>{t("home.shopNow")}</p>
       </Body>
     </DirectoryItemContainer>
   );

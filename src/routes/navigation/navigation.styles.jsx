@@ -40,12 +40,14 @@ export const NavigationContainer = styled.nav`
       justify-self: flex-end;
     }
 
-    .desktop-only-action {
-      display: inline-flex !important;
-    }
+    @media (min-width: 769px) {
+      .desktop-only-action {
+        display: inline-flex !important;
+      }
 
-    button {
-      display: inline-flex !important;
+      button {
+        display: inline-flex !important;
+      }
     }
   }
 
@@ -62,7 +64,7 @@ export const NavigationContainer = styled.nav`
 
   @media (max-width: 768px) {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     height: 56px;
     padding: 0 16px;
@@ -99,7 +101,8 @@ export const NavSection = styled.div`
     flex-shrink: 0;
 
     @media (max-width: 768px) {
-      display: none !important;
+      display: flex;
+      margin-left: auto;
     }
   }
 

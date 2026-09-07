@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import CartItem from "../cart-item/cart-item.component";
 import useCartStore from "../../stores/cartStore";
 import useUserStore from "../../stores/userStore";
+import { useTranslation } from "../../stores/languageStore";
 
 import {
   CartBackdrop,
@@ -14,6 +15,7 @@ import {
 } from "./cart-dropdown.styles";
 
 export const CartDrawerView = ({ onClose }) => {
+  const { t } = useTranslation();
   const cartProducts = useCartStore((state) => state.cartProducts);
   const cartCount = useCartStore((state) => state.cartCount);
   const cartTotal = useCartStore((state) => state.cartTotal);
@@ -29,12 +31,12 @@ export const CartDrawerView = ({ onClose }) => {
   return (
     <>
       <DrawerHeader>
-        <h3>PANIER [ {cartCount} ]</h3>
-        <button onClick={onClose}>[ FERMER ]</button>
+        <h3>{t("cart.title")} [ {cartCount} ]</h3>
+        <button onClick={onClose}>[ {t("nav.close")} ]</button>
       </DrawerHeader>
 
       <ShippingMeter>
-        <span>LIVRAISON EXPRESS OFFERTE</span>
+        <span>{t("checkout.freeShippingWorldwide")}</span>
       </ShippingMeter>
 
       <CartItemsList>
@@ -42,10 +44,9 @@ export const CartDrawerView = ({ onClose }) => {
           cartProducts.map((item) => <CartItem key={item.id} cartItem={item} />)
         ) : (
           <EmptyState>
-            <span className='title'>PANIER VIDE</span>
+            <span className='title'>{t("cart.emptyTitle")}</span>
             <span className='desc'>
-              Découvrez nos dernières collections Homme & Femme pour commencer
-              vos sélections.
+              {t("cart.emptyDesc")}
             </span>
           </EmptyState>
         )}
@@ -54,18 +55,18 @@ export const CartDrawerView = ({ onClose }) => {
       {cartProducts.length > 0 && (
         <DrawerFooter>
           <div className='subtotal-row'>
-            <span className='label'>SOUS-TOTAL ESTIMÉ</span>
+            <span className='label'>{t("cart.estimatedSubtotal")}</span>
             <span className='amount'>{cartTotal} €</span>
           </div>
 
           <button className='checkout-btn' onClick={goToCheckoutOrAuth}>
             {currentUser
-              ? `FINALISER LA COMMANDE`
-              : "SE CONNECTER POUR COMMANDER"}
+              ? t("cart.checkoutBtn")
+              : t("cart.loginToOrderBtn")}
           </button>
 
           <span className='note'>
-            EXPÉDITION 48H • PAIEMENT 100% SÉCURISÉ STRIPE
+            {t("cart.shippingNote")}
           </span>
         </DrawerFooter>
       )}

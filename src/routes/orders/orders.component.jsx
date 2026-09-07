@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import useUserStore from "../../stores/userStore";
+import { useTranslation } from "../../stores/languageStore";
 import { fetchUserOrders } from "../../utils/firestoreInteractions";
 import Button from "../../components/button/button.component";
 
@@ -93,6 +94,7 @@ const CalendarIcon = () => (
 const Orders = () => {
   const navigate = useNavigate();
   const currentUser = useUserStore((state) => state.currentUser);
+  const { t, currentLanguage, getProductName } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState({});
@@ -102,7 +104,7 @@ const Orders = () => {
     try {
       await navigator.clipboard.writeText(orderNum);
       setCopiedId(orderNum);
-      toast.success("Numéro de commande copié !");
+      toast.success(t("orders.copiedToast"));
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       console.warn("Could not copy order number:", err);
@@ -150,7 +152,7 @@ const Orders = () => {
   };
 
   const formatDate = (createdAt) => {
-    if (!createdAt) return "Date récente";
+    if (!createdAt) return t("orders.recentDate");
     let date;
     if (createdAt.toDate && typeof createdAt.toDate === "function") {
       date = createdAt.toDate();
@@ -159,10 +161,10 @@ const Orders = () => {
     } else if (typeof createdAt === "string" || typeof createdAt === "number") {
       date = new Date(createdAt);
     } else {
-      return "Date récente";
+      return t("orders.recentDate");
     }
 
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString(currentLanguage === "en" ? "en-US" : "fr-FR", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -175,9 +177,9 @@ const Orders = () => {
     return (
       <OrdersContainer>
         <OrdersHeader>
-          <OrdersTitle>VOS COMMANDES</OrdersTitle>
+          <OrdersTitle>{t("orders.title")}</OrdersTitle>
         </OrdersHeader>
-        <LoadingContainer>CHARGEMENT DE VOS COMMANDES...</LoadingContainer>
+        <LoadingContainer>{t("orders.loading")}</LoadingContainer>
       </OrdersContainer>
     );
   }
@@ -185,21 +187,18 @@ const Orders = () => {
   return (
     <OrdersContainer>
       <OrdersHeader>
-        <OrdersTitle>VOS COMMANDES</OrdersTitle>
+        <OrdersTitle>{t("orders.title")}</OrdersTitle>
         <OrdersCount>
-          [ {orders.length} {orders.length === 1 ? "COMMANDE" : "COMMANDES"} ]
+          [ {orders.length === 1 ? t("orders.count", { count: orders.length }) : t("orders.countPlural", { count: orders.length })} ]
         </OrdersCount>
       </OrdersHeader>
 
       {orders.length === 0 ? (
         <EmptyOrdersBox>
-          <h2>AUCUNE COMMANDE ENREGISTRÉE</h2>
-          <p>
-            Vous n'avez pas encore passé de commande sur le vestiaire STYLE — D.
-            Découvrez nos pièces sélectionnées et créez votre silhouette.
-          </p>
+          <h2>{t("orders.emptyTitle")}</h2>
+          <p>{t("orders.emptyDesc")}</p>
           <Button buttonType="base" onClick={() => navigate("/shop")}>
-            DÉCOUVRIR LE VESTIAIRE
+            {t("orders.discoverWardrobe")}
           </Button>
         </EmptyOrdersBox>
       ) : (
@@ -228,7 +227,7 @@ const Orders = () => {
                   }}
                 >
                   <OrderHeaderMain>
-                    <span className="order-number-label">NUMÉRO DE COMMANDE</span>
+                    <span className="order-number-label">{t("orders.orderNumberLabel")}</span>
                     <OrderNumberRow>
                       <div
                         className={`order-id-container ${copiedId === formattedOrderNumber ? "copied" : ""}`}
@@ -245,8 +244,8 @@ const Orders = () => {
                             handleCopyOrder(formattedOrderNumber);
                           }
                         }}
-                        title="Cliquer pour copier le numéro de commande"
-                        aria-label="Cliquer pour copier le numéro de commande"
+                        title={t("orders.clickToCopy")}
+                        aria-label={t("orders.clickToCopy")}
                       >
                         <span className="order-id">{formattedOrderNumber}</span>
                         <button
@@ -257,14 +256,14 @@ const Orders = () => {
                             handleCopyOrder(formattedOrderNumber);
                           }}
                           tabIndex={-1}
-                          title="Copier le numéro de commande"
-                          aria-label="Copier le numéro de commande"
+                          title={t("orders.clickToCopy")}
+                          aria-label={t("orders.clickToCopy")}
                         >
                           {copiedId === formattedOrderNumber ? <CheckIcon /> : <CopyIcon />}
                         </button>
                       </div>
                       <span className="order-badge">
-                        {order.payment === "success" ? "RÉGLÉE" : "CONFIRMÉE"}
+                        {order.payment === "success" ? t("orders.paidBadge") : t("orders.confirmedBadge")}
                       </span>
                     </OrderNumberRow>
                     <OrderDate>
@@ -276,13 +275,15 @@ const Orders = () => {
                   <OrderHeaderMeta>
                     <OrderTotal>
                       <span className="total-label">
-                        {itemCount} {itemCount > 1 ? "articles" : "article"} — TOTAL
+                        {itemCount > 1
+                          ? t("orders.articleTotalPlural", { count: itemCount })
+                          : t("orders.articleTotal", { count: itemCount })}
                       </span>
                       <span className="total-amount">{order.total} €</span>
                     </OrderTotal>
 
                     <OrderToggleBtn $isExpanded={isExpanded}>
-                      <span>{isExpanded ? "MASQUER" : "DÉTAILS"}</span>
+                      <span>{isExpanded ? t("orders.hide") : t("orders.details")}</span>
                       <ChevronDownIcon />
                     </OrderToggleBtn>
                   </OrderHeaderMeta>
@@ -302,7 +303,7 @@ const Orders = () => {
                                 {item.imageUrl ? (
                                   <img
                                     src={item.imageUrl}
-                                    alt={item.name || "Article"}
+                                    alt={getProductName(item)}
                                     loading="lazy"
                                   />
                                 ) : (
@@ -315,15 +316,15 @@ const Orders = () => {
                                   />
                                 )}
                                 <div className="item-details">
-                                  <span className="item-name">{item.name}</span>
+                                  <span className="item-name">{getProductName(item)}</span>
                                   <span className="item-unit-price">
-                                    Prix unitaire : {item.price} €
+                                    {t("orders.unitPrice")} {item.price} €
                                   </span>
                                 </div>
                               </OrderItemProduct>
 
                               <OrderItemMeta>
-                                <span className="item-qty">Qté : {item.quantity || 1}</span>
+                                <span className="item-qty">{t("orders.qty")} {item.quantity || 1}</span>
                                 <span className="item-subtotal">{itemSubtotal} €</span>
                               </OrderItemMeta>
                             </OrderItemRow>
@@ -333,7 +334,7 @@ const Orders = () => {
 
                     <OrderSummaryFooter>
                       <div className="final-total">
-                        <span className="label">MONTANT TOTAL RÉGLÉ :</span>
+                        <span className="label">{t("orders.totalPaidAmount")}</span>
                         <span className="value">{order.total} €</span>
                       </div>
                     </OrderSummaryFooter>

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import useCartStore from "../../stores/cartStore";
+import { useTranslation } from "../../stores/languageStore";
 import StyleD from "../../assets/styled.svg?react";
 import {
   ModalBackdrop,
@@ -14,6 +15,7 @@ import {
 } from "./confirm-delete-modal.styles";
 
 const ConfirmDeleteModal = () => {
+  const { t, getProductName } = useTranslation();
   const {
     deleteConfirmItem,
     closeDeleteConfirm,
@@ -36,6 +38,7 @@ const ConfirmDeleteModal = () => {
   const { product, products, action, onConfirm } = deleteConfirmItem;
   const isMultiple = !!products || Array.isArray(product);
   const itemsList = products || (Array.isArray(product) ? product : [product]);
+  const productName = product ? getProductName(product) : "";
 
   const handleConfirm = async () => {
     if (onConfirm) {
@@ -44,13 +47,13 @@ const ConfirmDeleteModal = () => {
       const ids = itemsList.map((p) => p.id);
       await useCartStore.getState().removeMultipleProductsFromCart(ids);
       const count = itemsList.length;
-      toast.success(`${count} article${count > 1 ? "s" : ""} retiré${count > 1 ? "s" : ""} du panier.`);
+      toast.success(t("modal.toastMultipleRemoved", { count }));
     } else if (action === "remove") {
       handleProductQuantity(product, "remove");
-      toast.success(`${product.name} retiré du panier.`);
+      toast.success(t("modal.toastSingleRemoved", { name: productName }));
     } else {
       removeProductFromCart(product);
-      toast.success(`${product.name} retiré du panier.`);
+      toast.success(t("modal.toastSingleRemoved", { name: productName }));
     }
     closeDeleteConfirm();
   };
@@ -60,10 +63,10 @@ const ConfirmDeleteModal = () => {
       <ModalCard onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <div className="header-left">
-            <span className="badge">[ SÉLECTION PANIER ]</span>
+            <span className="badge">[ {t("modal.cartSelectionBadge")} ]</span>
             <StyleD className="logo-icon" />
           </div>
-          <button className="close-btn" onClick={closeDeleteConfirm} title="Fermer" aria-label="Fermer">
+          <button className="close-btn" onClick={closeDeleteConfirm} title={t("modal.close")} aria-label={t("modal.close")}>
             <svg
               width="14"
               height="14"
@@ -82,8 +85,8 @@ const ConfirmDeleteModal = () => {
 
         <h3 className="modal-title">
           {isMultiple
-            ? `RETIRER LES ${itemsList.length} ARTICLES ?`
-            : "RETIRER CET ARTICLE ?"}
+            ? t("modal.titleMultiple", { count: itemsList.length })
+            : t("modal.titleSingle")}
         </h3>
 
         {!isMultiple && product && (
@@ -91,14 +94,14 @@ const ConfirmDeleteModal = () => {
             <div className="thumb-box">
               <img
                 src={`https://wsrv.nl/?url=${encodeURIComponent(product.imageUrl)}&w=200&output=webp`}
-                alt={product.name}
+                alt={productName}
               />
             </div>
             <div className="item-meta">
-              <span className="name">{product.name}</span>
+              <span className="name">{productName}</span>
               <span className="price">{product.price} €</span>
               {product.quantity > 1 && (
-                <span className="qty-tag">Quantité sélectionnée : {product.quantity}</span>
+                <span className="qty-tag">{t("modal.selectedQty")} {product.quantity}</span>
               )}
             </div>
           </ProductPreviewBox>
@@ -106,16 +109,16 @@ const ConfirmDeleteModal = () => {
 
         <Message>
           {isMultiple
-            ? `Êtes-vous sûr de vouloir retirer les ${itemsList.length} articles sélectionnés de votre panier ?`
-            : "Êtes-vous sûr de vouloir retirer cette pièce de votre panier ?"}
+            ? t("modal.deleteMultiplePrompt", { count: itemsList.length })
+            : t("modal.deleteSinglePrompt")}
         </Message>
 
         <ModalActions>
           <DeleteActionButton onClick={handleConfirm}>
-            [ RETIRER ]
+            [ {t("modal.removeBtn")} ]
           </DeleteActionButton>
           <KeepActionButton onClick={closeDeleteConfirm}>
-            [ CONSERVER ]
+            [ {t("modal.keepBtn")} ]
           </KeepActionButton>
         </ModalActions>
       </ModalCard>

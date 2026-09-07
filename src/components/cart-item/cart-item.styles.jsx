@@ -12,6 +12,16 @@ export const CartItemContainer = styled.div`
   &:hover {
     border-color: var(--border-dark);
   }
+
+  @media (max-width: 480px) {
+    gap: 10px;
+    padding: 10px 8px;
+  }
+
+  @media (max-width: 380px) {
+    gap: 8px;
+    padding: 8px 6px;
+  }
 `;
 
 export const ImageContainer = styled.div`
@@ -21,6 +31,16 @@ export const ImageContainer = styled.div`
   overflow: hidden;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
+
+  @media (max-width: 480px) {
+    width: 62px;
+    height: 80px;
+  }
+
+  @media (max-width: 380px) {
+    width: 52px;
+    height: 68px;
+  }
 
   img {
     width: 100%;
@@ -34,6 +54,7 @@ export const ItemDetails = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
 
   .top-row {
     display: flex;
@@ -42,12 +63,25 @@ export const ItemDetails = styled.div`
     gap: 8px;
 
     .name {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       color: var(--text-primary);
-      line-height: 1.3;
+      line-height: 1.25;
+      word-break: break-word;
+
+      @media (max-width: 480px) {
+        font-size: 0.69rem;
+        line-height: 1.2;
+        letter-spacing: 0.2px;
+      }
+
+      @media (max-width: 380px) {
+        font-size: 0.64rem;
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
     }
   }
 

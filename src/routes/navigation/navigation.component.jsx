@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CartDrawerView } from "../../components/cart-dropdown/cart-dropdown.component";
 import { signOutUser } from "../../libs/firebase/firebase.utils";
 import useUserStore from "../../stores/userStore";
 import useCartStore from "../../stores/cartStore";
+import { useTranslation } from "../../stores/languageStore";
+import LanguageSwitcher from "../../components/language-switcher/language-switcher.component";
 
 import ShoppingBag from "../../assets/shopping-bag.svg?react";
 
@@ -173,21 +175,22 @@ const MobileCartIcon = ({ count }) => (
   </svg>
 );
 
-const CATEGORIES_LIST = [
-  { id: "homme", label: "HOMME", tag: "SÉRIE 01" },
-  { id: "femme", label: "FEMME", tag: "SÉRIE 02" },
-  { id: "vestes", label: "VESTES", tag: "SÉRIE 03" },
-  { id: "baskets", label: "BASKETS", tag: "SÉRIE 04" },
-  { id: "chapeaux", label: "CHAPEAUX", tag: "SÉRIE 05" },
-];
-
 const Navigation = () => {
+  const { t, currentLanguage } = useTranslation();
   const currentUser = useUserStore((state) => state.currentUser);
   const { isCartOpen, setIsCartOpen, cartCount } = useCartStore();
   const [activeDrawer, setActiveDrawer] = useState(null); // 'menu' | 'account' | 'cart' | null
   const [lastActiveRightDrawer, setLastActiveRightDrawer] = useState("account");
   const location = useLocation();
   const navigate = useNavigate();
+
+  const categories = [
+    { id: "homme", label: t("categories.mens").toUpperCase(), tag: currentLanguage === "en" ? "SERIES 01" : "SÉRIE 01" },
+    { id: "femme", label: t("categories.womens").toUpperCase(), tag: currentLanguage === "en" ? "SERIES 02" : "SÉRIE 02" },
+    { id: "vestes", label: t("categories.jackets").toUpperCase(), tag: currentLanguage === "en" ? "SERIES 03" : "SÉRIE 03" },
+    { id: "baskets", label: t("categories.sneakers").toUpperCase(), tag: currentLanguage === "en" ? "SERIES 04" : "SÉRIE 04" },
+    { id: "chapeaux", label: t("categories.hats").toUpperCase(), tag: currentLanguage === "en" ? "SERIES 05" : "SÉRIE 05" },
+  ];
 
   useEffect(() => {
     if (activeDrawer === "account" || activeDrawer === "cart") {
@@ -242,7 +245,7 @@ const Navigation = () => {
   const handleSignOut = async () => {
     closeDrawer();
     await signOutUser();
-    toast.success("Déconnexion réussie. À bientôt !");
+    toast.success(t("auth.logoutSuccessToast"));
   };
 
   // Sync cart store isCartOpen with activeDrawer === 'cart'
@@ -570,12 +573,12 @@ const Navigation = () => {
   const itemRefs = useRef({});
 
   // Active category derived from location
-  const activeCatId = CATEGORIES_LIST.find(
+  const activeCatId = categories.find(
     (cat) => location.pathname === `/shop/${cat.id}`
   )?.id || null;
 
   // Compute position of target element inside NavPillContainer
-  const updatePillPosition = (targetId) => {
+  const updatePillPosition = useCallback((targetId) => {
     if (!targetId || !itemRefs.current[targetId] || !navPillContainerRef.current) {
       setPillStyle((prev) => ({ ...prev, visible: false }));
       return;
@@ -591,23 +594,42 @@ const Navigation = () => {
       height: itemRect.height,
       visible: true,
     });
-  };
+  }, []);
 
   // Target to highlight: hovered item takes priority, otherwise falls back to active category
   const currentPillTarget = hoveredCatId || activeCatId;
 
-  useEffect(() => {
+  // Re-measure immediately on layout changes, route changes, or language switch
+  useLayoutEffect(() => {
     updatePillPosition(currentPillTarget);
-  }, [currentPillTarget, location.pathname]);
+  }, [currentPillTarget, location.pathname, currentLanguage, updatePillPosition]);
 
-  // Handle window resize for accurate pill positioning
+  // Handle window resize and element dimension changes (e.g. text label width change on language switch)
   useEffect(() => {
     const handleResize = () => {
       updatePillPosition(currentPillTarget);
     };
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [currentPillTarget]);
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== "undefined" && navPillContainerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updatePillPosition(currentPillTarget);
+      });
+      resizeObserver.observe(navPillContainerRef.current);
+      Object.values(itemRefs.current).forEach((el) => {
+        if (el) resizeObserver.observe(el);
+      });
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [currentPillTarget, currentLanguage, updatePillPosition]);
 
   // Close menus on route navigation
   useEffect(() => {
@@ -629,7 +651,7 @@ const Navigation = () => {
     <LayoutContainer>
       <NavigationContainer className={hideTopCategories ? "checkout-nav" : ""}>
         {/* Zone 1: Brand Identity Mark with black STYLE container and red D badge (Gauche) */}
-        <LogoContainer to='/' title="Accueil style-d" aria-label="Accueil style-d">
+        <LogoContainer to='/' title={t("nav.brand")} aria-label={t("nav.brand")}>
           <span className='brand-text'>STYLE</span>
           <span className='brand-badge-d'>D</span>
         </LogoContainer>
@@ -650,7 +672,7 @@ const Navigation = () => {
                 $visible={pillStyle.visible}
               />
 
-              {CATEGORIES_LIST.map((cat) => {
+              {categories.map((cat) => {
                 const isTarget = currentPillTarget === cat.id;
                 return (
                   <CategoryPillItem
@@ -675,13 +697,16 @@ const Navigation = () => {
           <div style={{ gridColumn: 2 }} />
         )}
 
-        {/* Zone 3: 3 buttons on the right: Menu (Hamburger), Compte, Panier */}
+        {/* Zone 3: Language switcher, Menu (Hamburger), Compte, Panier */}
         <NavSection className='right'>
+          {/* Language Switcher (Visible on desktop and mobile top bar) */}
+          <LanguageSwitcher variant="nav" />
+
           {/* 1. Hamburger menu button (Always visible at top right) */}
           <NavMenuButton
             onClick={() => handleDrawerToggle("menu")}
-            title="Menu des catégories"
-            aria-label="Menu des catégories"
+            title={t("nav.categories")}
+            aria-label={t("nav.categories")}
             $isOpen={activeDrawer === "menu"}
           >
             <HamburgerIcon className="hamburger-icon" />
@@ -691,8 +716,8 @@ const Navigation = () => {
           <AccountIconButton
             className="desktop-only-action"
             onClick={() => handleDrawerToggle("account")}
-            title="Mon compte"
-            aria-label="Mon compte"
+            title={t("nav.myAccount")}
+            aria-label={t("nav.myAccount")}
             $isOpen={activeDrawer === "account"}
           >
             <UserIcon className="user-icon" />
@@ -703,8 +728,8 @@ const Navigation = () => {
             <CartButton
               className="desktop-only-action"
               onClick={() => handleDrawerToggle("cart")}
-              title="Panier"
-              aria-label="Panier"
+              title={t("nav.cart")}
+              aria-label={t("nav.cart")}
               $isActive={activeDrawer === "cart"}
             >
               <MobileCartIcon count={cartCount} />
@@ -729,16 +754,16 @@ const Navigation = () => {
       >
         <DrawerContentWrapper key="menu">
           <SideMenuHeader>
-            <h3>CATÉGORIES</h3>
-            <button onClick={closeDrawer}>[ FERMER ]</button>
+            <h3>{t("nav.categories")}</h3>
+            <button onClick={closeDrawer}>[ {t("nav.close")} ]</button>
           </SideMenuHeader>
 
           <SideMenuBody>
             <SideMenuCategoryItem to='/shop' onClick={closeDrawer}>
-              <span className="item-title">TOUTE LA BOUTIQUE</span>
+              <span className="item-title">{t("nav.allShop")}</span>
               <span className="arrow-indicator">→</span>
             </SideMenuCategoryItem>
-            {CATEGORIES_LIST.map((cat) => (
+            {categories.map((cat) => (
               <SideMenuCategoryItem
                 key={cat.id}
                 to={`/shop/${cat.id}`}
@@ -754,12 +779,12 @@ const Navigation = () => {
             {currentUser ? (
               <SideMenuLink to='/orders' onClick={closeDrawer}>
                 <PackageIcon size={14} />
-                <span>MES COMMANDES</span>
+                <span>{t("nav.myOrders")}</span>
               </SideMenuLink>
             ) : (
               <SideMenuLink to='/auth' onClick={closeDrawer}>
                 <UserIcon size={14} />
-                <span>CONNEXION / CRÉER UN COMPTE</span>
+                <span>{t("nav.loginRegister")}</span>
               </SideMenuLink>
             )}
             <SideMenuLink
@@ -768,8 +793,12 @@ const Navigation = () => {
               onClick={closeDrawer}
             >
               <ShoppingBag style={{ width: 14, height: 14 }} />
-              <span>OUVRIR LE PANIER ({cartCount})</span>
+              <span>{t("nav.viewCart")} ({cartCount})</span>
             </SideMenuLink>
+
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border-color)", width: "100%" }}>
+              <LanguageSwitcher variant="drawer" />
+            </div>
           </SideMenuFooter>
         </DrawerContentWrapper>
       </UnifiedDrawerContainer>
@@ -785,8 +814,8 @@ const Navigation = () => {
           (activeDrawer === null && lastActiveRightDrawer === "account" && dragState?.side !== "right")) && (
           <DrawerContentWrapper key="account">
             <AccountDrawerHeader>
-              <h3>MON COMPTE</h3>
-              <button onClick={closeDrawer}>[ FERMER ]</button>
+              <h3>{t("nav.myAccount")}</h3>
+              <button onClick={closeDrawer}>[ {t("nav.close")} ]</button>
             </AccountDrawerHeader>
 
             <AccountDrawerBody>
@@ -799,7 +828,7 @@ const Navigation = () => {
                     <div className="user-info">
                       <div className="status-badge">
                         <span className="dot" />
-                        <span>CONNECTÉ</span>
+                        <span>{currentLanguage === "en" ? "ONLINE" : "CONNECTÉ"}</span>
                       </div>
                       <span className="user-name">
                         {currentUser.displayName || currentUser.email?.split("@")[0] || "Client"}
@@ -808,12 +837,12 @@ const Navigation = () => {
                     </div>
                   </AccountUserCard>
 
-                  <DrawerSectionLabel>NAVIGATION</DrawerSectionLabel>
+                  <DrawerSectionLabel>{t("nav.quickAccess")}</DrawerSectionLabel>
 
                   <AccountDrawerItem to="/orders" onClick={closeDrawer}>
                     <div className="item-content">
                       <PackageIcon size={15} />
-                      <span>MES COMMANDES</span>
+                      <span>{t("nav.myOrders")}</span>
                     </div>
                     <span className="item-arrow">→</span>
                   </AccountDrawerItem>
@@ -824,7 +853,7 @@ const Navigation = () => {
                   >
                     <div className="item-content">
                       <ShoppingBag style={{ width: 15, height: 15 }} />
-                      <span>VOIR LE PANIER</span>
+                      <span>{t("nav.viewCart")}</span>
                     </div>
                     <span className="cart-count-pill">{cartCount}</span>
                   </AccountDrawerItem>
@@ -832,7 +861,7 @@ const Navigation = () => {
                   <AccountDrawerItem to="/shop" onClick={closeDrawer}>
                     <div className="item-content">
                       <span className="bullet">■</span>
-                      <span>TOUTE LA BOUTIQUE</span>
+                      <span>{t("nav.allShop")}</span>
                     </div>
                     <span className="item-arrow">→</span>
                   </AccountDrawerItem>
@@ -843,23 +872,23 @@ const Navigation = () => {
                     <div className="guest-icon-box">
                       <UserIcon size={26} />
                     </div>
-                    <h4>ESPACE CLIENT</h4>
+                    <h4>{t("nav.guestCustomer")}</h4>
                     <p>
-                      Connectez-vous pour suivre vos commandes, vos favoris et accéder rapidement à votre compte.
+                      {t("nav.guestSubtitle")}
                     </p>
                   </AccountGuestCard>
 
                   <AccountPrimaryButton to="/auth" onClick={closeDrawer}>
-                    <span>CONNEXION / S'INSCRIRE</span>
+                    <span>{t("nav.loginRegister")}</span>
                     <span>→</span>
                   </AccountPrimaryButton>
 
-                  <DrawerSectionLabel style={{ marginTop: 8 }}>ACCÈS RAPIDE</DrawerSectionLabel>
+                  <DrawerSectionLabel style={{ marginTop: 8 }}>{t("nav.quickAccess")}</DrawerSectionLabel>
 
                   <AccountDrawerItem to="/orders" onClick={closeDrawer}>
                     <div className="item-content">
                       <PackageIcon size={15} />
-                      <span>SUIVRE UNE COMMANDE</span>
+                      <span>{t("nav.trackOrder")}</span>
                     </div>
                     <span className="item-arrow">→</span>
                   </AccountDrawerItem>
@@ -870,19 +899,22 @@ const Navigation = () => {
                   >
                     <div className="item-content">
                       <ShoppingBag style={{ width: 15, height: 15 }} />
-                      <span>VOIR LE PANIER</span>
+                      <span>{t("nav.viewCart")}</span>
                     </div>
                     <span className="cart-count-pill">{cartCount}</span>
                   </AccountDrawerItem>
                 </>
               )}
+
+              <DrawerSectionLabel style={{ marginTop: 14 }}>{t("nav.language")}</DrawerSectionLabel>
+              <LanguageSwitcher variant="drawer" />
             </AccountDrawerBody>
 
             {currentUser && (
               <AccountDrawerFooter>
                 <AccountLogoutButton onClick={handleSignOut}>
                   <LogoutIcon size={15} />
-                  <span>SE DÉCONNECTER</span>
+                  <span>{t("nav.logout")}</span>
                 </AccountLogoutButton>
               </AccountDrawerFooter>
             )}
@@ -904,30 +936,30 @@ const Navigation = () => {
           <MobileBottomCategoryButton
             onClick={handleCategoryClick}
             $isActive={activeDrawer === "menu" || (dragState?.side === "left" && dragState.progress > 0.4)}
-            title="Catégories"
-            aria-label="Catégories"
+            title={t("nav.categories")}
+            aria-label={t("nav.categories")}
           >
             <HamburgerIcon size={18} className="hamburger-icon" />
           </MobileBottomCategoryButton>
         </MobileBottomLeft>
 
         <MobileBottomRight>
-          {/* Juste à côté le compte (juste l'icône, sans écriture ni point lumineux) */}
+          {/* Juste à côté le compte */}
           <MobileBottomButton
             onClick={handleAccountClick}
             $isActive={activeDrawer === "account"}
-            title="Mon compte"
-            aria-label="Mon compte"
+            title={t("nav.myAccount")}
+            aria-label={t("nav.myAccount")}
           >
             <UserIcon size={19} className="user-icon" />
           </MobileBottomButton>
 
-          {/* En bas à droite le panier avec icône et nombre au milieu */}
+          {/* En bas à droite le panier */}
           <MobileBottomCartIconButton
             onClick={handleCartClick}
             $isActive={activeDrawer === "cart" || (dragState?.side === "right" && dragState.progress > 0.4)}
-            title="Panier"
-            aria-label="Panier"
+            title={t("nav.cart")}
+            aria-label={t("nav.cart")}
           >
             <MobileCartIcon count={cartCount} />
           </MobileBottomCartIconButton>
@@ -939,7 +971,7 @@ const Navigation = () => {
       </MainContent>
 
       <FooterContainer>
-        © {currentYear} style-d.autem.dev — Tous droits réservés.
+        © {currentYear} style-d.autem.dev — {currentLanguage === "en" ? "All rights reserved." : "Tous droits réservés."}
       </FooterContainer>
     </LayoutContainer>
   );
