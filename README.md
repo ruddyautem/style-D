@@ -37,6 +37,7 @@ Plutôt que d'utiliser Redux ou des Contextes complexes, j'ai choisi **Zustand**
 ### ✨ Fonctionnalités clés
 
 - **Page produit dédiée & Tailles** : Page individuelle pour chaque article avec sélection de taille (XS à XXL), gestion de quantité, calcul du total en temps réel et rappel de connexion.
+- **Défilement automatique (ScrollToTop)** : Remontée instantanée en haut de page à chaque changement de catégorie, de produit ou de route, pour un confort de navigation optimal sur mobile.
 - **Gestion du panier** : Sélection multiple d'articles avec cases à cocher, barre d'actions groupées et modale de confirmation pour supprimer.
 - **Navigation mobile & Gestes tactiles** : Menu catégories coulissant depuis la gauche, panier depuis la droite, et gestes de glissement tactiles (désactivés lors du zoom pour une navigation fluide).
 - **Notifications (Toasts)** : Notifications interactives avec barre de temps animée, pause au survol et fermeture au clic.
@@ -72,7 +73,8 @@ style-d/
 │   │   ├── checkout-item/           # Lignes d'articles checkout avec steppers
 │   │   ├── confirm-delete-modal/    # Modale de confirmation de suppression
 │   │   ├── product-card/            # Cartes catalogue avec badge prix
-│   │   └── protected-route/         # Logique de protection des pages
+│   │   ├── protected-route/         # Logique de protection des pages
+│   │   └── scroll-to-top/           # Remontée automatique en haut de page
 │   ├── libs/
 │   │   └── firebase/                # Initialisation de Firebase
 │   ├── routes/                      # Vues principales
@@ -142,6 +144,7 @@ Instead of Redux or heavy Context setups, I chose **Zustand** for its simplicity
 ### ✨ Key Features
 
 - **Dedicated Product Page & Sizing**: Individual product view with size selector (XS to XXL), quantity controls, live subtotal computation, and sign-in prompts.
+- **Scroll to Top**: Automatic instant scroll to top on every route, category, or product navigation for an effortless mobile experience.
 - **Cart Management**: Multi-item selection with checkboxes, bulk action toolbar, and delete confirmation modal.
 - **Mobile Navigation & Swipe Gestures**: Left-sliding categories menu, right-sliding cart, and touch swipe gestures (disabled while zoomed in for smooth panning).
 - **Toast Notifications**: Interactive toasts with animated progress timer, hover pause, and click to dismiss.
@@ -177,7 +180,8 @@ style-d/
 │   │   ├── checkout-item/           # Checkout product rows & steppers
 │   │   ├── confirm-delete-modal/    # Deletion confirmation modal
 │   │   ├── product-card/            # Catalog cards with price badge
-│   │   └── protected-route/         # Page protection logic
+│   │   ├── protected-route/         # Page protection logic
+│   │   └── scroll-to-top/           # Automatic scroll restoration
 │   ├── libs/
 │   │   └── firebase/                # Firebase initialization
 │   ├── routes/                      # Main views

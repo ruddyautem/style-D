@@ -201,6 +201,7 @@ const Navigation = () => {
 
   const closeDrawer = () => {
     setActiveDrawer(null);
+    document.body.style.overflow = "";
   };
 
   const [dragState, setDragState] = useState(null); // { side: 'left' | 'right', offset: number, progress: number, animating: boolean } | null

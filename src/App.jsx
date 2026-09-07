@@ -12,6 +12,7 @@ import Failure from "./routes/failure/Failure";
 import useUserStore from "./stores/userStore";
 import ProtectedRoute from "./components/protected-route/protected-route.component";
 import Orders from "./routes/orders/orders.component";
+import ScrollToTop from "./components/scroll-to-top/scroll-to-top.component";
 
 const App = () => {
   useUserStore.getState().initializeListener();
@@ -47,6 +48,7 @@ const App = () => {
         }}
       />
       <ConfirmDeleteModal />
+      <ScrollToTop />
       <Routes>
         <Route path='/' element={<Navigation />}>
           <Route index element={<Home />} />
