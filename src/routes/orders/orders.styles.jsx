@@ -68,14 +68,17 @@ export const OrderCardHeader = styled.div`
   align-items: center;
   cursor: pointer;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
   background-color: ${({ $isExpanded }) =>
     $isExpanded ? "var(--bg-primary)" : "var(--bg-surface)"};
   border-bottom: ${({ $isExpanded }) =>
     $isExpanded ? "1px solid var(--border-color)" : "none"};
   transition: background-color 0.2s ease;
 
-  &:hover {
-    background-color: var(--bg-primary);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-primary);
+    }
   }
 
   @media (max-width: 768px) {
@@ -114,10 +117,28 @@ export const OrderNumberRow = styled.div`
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     padding: 3px 5px 3px 10px;
-    transition: border-color 0.15s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 
-    &:hover {
-      border-color: var(--border-dark);
+    @media (hover: hover) {
+      &:hover {
+        border-color: var(--border-dark);
+      }
+    }
+
+    &:active {
+      background-color: var(--bg-surface);
+    }
+
+    &.copied {
+      border-color: #15803d;
+      background-color: rgba(21, 128, 61, 0.08);
+
+      .order-id {
+        color: #15803d;
+      }
     }
 
     .order-id {
@@ -126,6 +147,7 @@ export const OrderNumberRow = styled.div`
       font-weight: 800;
       letter-spacing: 0.5px;
       color: var(--text-primary);
+      transition: color 0.15s ease;
     }
 
     .copy-btn {

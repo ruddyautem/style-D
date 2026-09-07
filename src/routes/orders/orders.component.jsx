@@ -230,7 +230,24 @@ const Orders = () => {
                   <OrderHeaderMain>
                     <span className="order-number-label">NUMÉRO DE COMMANDE</span>
                     <OrderNumberRow>
-                      <div className="order-id-container">
+                      <div
+                        className={`order-id-container ${copiedId === formattedOrderNumber ? "copied" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyOrder(formattedOrderNumber);
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCopyOrder(formattedOrderNumber);
+                          }
+                        }}
+                        title="Cliquer pour copier le numéro de commande"
+                        aria-label="Cliquer pour copier le numéro de commande"
+                      >
                         <span className="order-id">{formattedOrderNumber}</span>
                         <button
                           type="button"
@@ -239,6 +256,7 @@ const Orders = () => {
                             e.stopPropagation();
                             handleCopyOrder(formattedOrderNumber);
                           }}
+                          tabIndex={-1}
                           title="Copier le numéro de commande"
                           aria-label="Copier le numéro de commande"
                         >
