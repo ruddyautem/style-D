@@ -28,10 +28,10 @@ const ProductCard = ({ product }) => {
           alt={displayName}
           loading="lazy"
         />
+        <Price className="floating-price">{price} €</Price>
       </div>
       <Footer>
         <Name>{displayName}</Name>
-        <Price>{price} €</Price>
       </Footer>
     </ProductCardContainer>
   );

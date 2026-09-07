@@ -40,7 +40,6 @@ export const ProductCardContainer = styled.div`
 export const Footer = styled.div`
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
   border-top: 1px solid var(--border-color);
@@ -61,12 +60,31 @@ export const Name = styled.span`
   letter-spacing: 0.5px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 72%;
-  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  width: 100%;
+  line-height: 1.25;
+  word-break: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 0.68rem;
+    line-height: 1.25;
+    letter-spacing: 0.2px;
+    min-height: 2.5em;
+  }
+
+  @media (max-width: 380px) {
+    font-size: 0.62rem;
+  }
 `;
 
 export const Price = styled.span`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -75,8 +93,15 @@ export const Price = styled.span`
   font-family: var(--font-sans);
   font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   white-space: nowrap;
   padding: 4px 8px;
-  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    top: 6px;
+    right: 6px;
+    font-size: 0.66rem;
+    padding: 3px 6px;
+  }
 `;

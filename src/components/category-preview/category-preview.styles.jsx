@@ -89,17 +89,14 @@ export const Preview = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  height: 380px;
 
   @media (max-width: 1100px) {
     grid-template-columns: repeat(3, 1fr);
-    height: 340px;
   }
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    height: auto;
   }
 `;
 
