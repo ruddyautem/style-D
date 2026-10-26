@@ -191,7 +191,7 @@ export const saveOrderToFirestore = async (
       0,
     );
 
-    await setDoc(doc(db, "users", userId, "orders", orderNumber), {
+    await setDoc(doc(db, "users", userId, "orders", sessionId), {
       orderNumber,
       sessionId,
       items: cartItems.map((item) => ({
@@ -215,15 +215,18 @@ export const fetchOrderFromFirestore = async (userId, sessionId) => {
     if (!userId || !sessionId) return null;
     const orderNumber = generateOrderNumber(sessionId);
 
-    // 1. Try finding by orderNumber document ID
+    const canonical = await getDoc(doc(db, "users", userId, "orders", sessionId));
+    if (canonical.exists()) return { id: canonical.id, ...canonical.data() };
+
+    // Legacy orders remain readable
     const orderDoc = await getDoc(doc(db, "users", userId, "orders", orderNumber));
-    if (orderDoc.exists()) {
+    if (orderDoc.exists() && orderDoc.data().sessionId === sessionId) {
       return { id: orderDoc.id, orderNumber, ...orderDoc.data() };
     }
 
     // 2. Try legacy doc ID (sessionId.slice(6))
     const legacyDoc = await getDoc(doc(db, "users", userId, "orders", sessionId.slice(6)));
-    if (legacyDoc.exists()) {
+    if (legacyDoc.exists() && legacyDoc.data().sessionId === sessionId) {
       return { id: legacyDoc.id, orderNumber, ...legacyDoc.data() };
     }
 

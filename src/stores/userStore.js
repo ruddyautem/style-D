@@ -58,7 +58,6 @@ const useUserStore = create((set) => ({
 const handleUserLogin = async (user) => {
   const { setUserId, setCartProducts } = useCartStore.getState();
 
-  console.log("User logged in:", user);
 
   try {
     await createUserDocumentFromAuth(user, {

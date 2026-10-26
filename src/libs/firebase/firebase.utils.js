@@ -9,7 +9,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -24,7 +24,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 
 // Auth
-const auth = getAuth(firebaseApp);
+export const auth = getAuth(firebaseApp);
 auth.useDeviceLanguage();
 
 const googleProvider = new GoogleAuthProvider();
@@ -33,21 +33,7 @@ googleProvider.setCustomParameters({
 });
 
 // Firestore
-export const db = getFirestore(firebaseApp);
-
-// Inside firebase.utils.js, replace the DEV block with this:
-if (import.meta.env.DEV) {
-  Object.defineProperty(db, '_settings', {
-    value: {
-      ...db._settings,
-      experimentalForceLongPolling: true,
-      experimentalAutoDetectLongPolling: true,
-    },
-    writable: true,
-  });
-
-  console.log("🔧 Firestore v12: Long polling + auto detect enabled");
-}
+export const db = initializeFirestore(firebaseApp, import.meta.env.DEV ? { experimentalAutoDetectLongPolling: true } : {});
 
 // Authentication methods
 export const signInWithGooglePopup = () =>

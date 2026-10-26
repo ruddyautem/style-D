@@ -2,7 +2,8 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import Stripe from "stripe";
+import { createApiHandler } from "./server/checkout.js";
+const handleApi = createApiHandler();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,86 +29,12 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer(async (req, res) => {
-  // CORS Preflight
-  if (req.method === "OPTIONS") {
-    res.writeHead(200, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
-    return res.end();
-  }
+  if (await handleApi(req, res)) return;
 
-  const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  const parsedUrl = new URL(req.url, "http://localhost");
   const pathname = parsedUrl.pathname;
 
-  // 1. Stripe Checkout API Endpoint
-  if (pathname === "/api/create-checkout-session" && req.method === "POST") {
-    try {
-      const secretKey =
-        process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY;
-      if (!secretKey) {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        return res.end(
-          JSON.stringify({
-            error:
-              "STRIPE_SECRET_KEY (ou VITE_STRIPE_SECRET_KEY) non configurée dans l'environnement.",
-          })
-        );
-      }
-
-      let body = "";
-      for await (const chunk of req) {
-        body += chunk;
-      }
-      const { cartItems, userEmail, userName, origin, locale } = JSON.parse(body || "{}");
-
-      if (!cartItems || !cartItems.length) {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ error: "Le panier est vide." }));
-      }
-
-      const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18.acacia" });
-
-      const customer = await stripe.customers.create({
-        name: userName || "Client STYLE — D",
-        email: userEmail || undefined,
-      });
-
-      const proto = req.headers["x-forwarded-proto"] || "https";
-      const host = req.headers["x-forwarded-host"] || req.headers.host;
-      const baseUrl = origin || `${proto}://${host}`;
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: cartItems.map((item) => ({
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: item.name,
-              images: item.imageUrl ? [item.imageUrl] : [],
-            },
-            unit_amount: Math.round(item.price * 100),
-          },
-          quantity: item.quantity,
-        })),
-        mode: "payment",
-        customer: customer.id,
-        success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/failure`,
-        locale: locale === "en" ? "en" : "fr",
-      });
-
-      res.writeHead(200, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify({ url: session.url, id: session.id }));
-    } catch (err) {
-      console.error("Erreur Stripe:", err);
-      res.writeHead(500, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify({ error: err.message || "Erreur serveur Stripe" }));
-    }
-  }
-
-  // 2. Static Files + SPA Fallback
+  // Static Files + SPA Fallback
   if (req.method === "GET" || req.method === "HEAD") {
     let safePath = path.normalize(pathname).replace(/^(\.\.[\\/])+/, "");
     if (safePath.startsWith("/")) safePath = safePath.slice(1);

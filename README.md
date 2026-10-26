@@ -227,3 +227,17 @@ bun run dev
 Then head to [http://localhost:5173](http://localhost:5173).
 
 > 💡 Don't forget to create a `.env.local` file at the root with your Firebase and Stripe keys so the project can connect to those services.
+
+
+## Payment configuration
+
+Checkout uses the original browser Firebase session and browser-side order saving. Firebase Admin, service-account credentials, server order persistence and the added webhook are no longer used.
+
+- Set server-only STRIPE_SECRET_KEY. Never prefix a secret Stripe key with VITE_.
+- In production, set SITE_URL to the exact HTTPS origin of the shop; local development defaults to http://localhost:5173.
+- The same checkout handler serves Vite development and production. It limits request size and validates cart quantities and amounts. Prices are supplied by the browser as in the original flow; there is no server catalogue lookup or server payment proof for saved orders.
+- New orders use the full Stripe session ID as their document ID to avoid collisions; previous orders remain readable.
+- The optional local firestore.rules enforce ownership and permit the browser to create its own orders. They have not been deployed. They do not verify payment with Stripe.
+- Run bun run test and bun run build. Tests use simulated Stripe services, without payments or remote database access.
+
+The Stripe client preserves the original explicit API version `2024-12-18.acacia`. If checkout fails, the development terminal logs the stage, error type/code and parameter without printing credentials or customer data.
